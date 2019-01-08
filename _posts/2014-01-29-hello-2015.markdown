@@ -1,83 +1,59 @@
 ---
 layout:     post
-title:      "Hello 2015"
-subtitle:   " \"Hello World, Hello Blog\""
-date:       2015-01-29 12:00:00
-author:     "Hux"
+title:      "内部类"
+subtitle:   " \"内部类..\""
+date:       2018-01-29 12:00:00
+author:     "ALID"
 header-img: "img/post-bg-2015.jpg"
 catalog: true
 tags:
-    - 生活
+    - 基类
     - Meta
 ---
+### 内部类
+内部类是个编译时的概念，一旦编译成功后，它就与外围类属于两个完全不同的类（当然它们之间还是有联系的）。对于一个名为Outer的外围类和一个名为Inner的内部类，在编译成功后，会出现这样两个class文件：``Outer.class`` 和 ``Outer$Inner.class``。
 
-> “Yeah It's on. ”
+#### 成员内部类
+成员内部类隐式的```持有外部类的一个引用```,而静态内部类是没有的.
+```java
+public class Outer {
+    
+    private void outerDo() {}
+    
+    class Inter {
+        
+        private void innerDo() {
+            // 内部类可以直接访问外部类成员，原因在于隐式持有了一个外部类引用
+            outerDo();
+            // Outer.this 就是内部类隐式持有的外部类引用
+            Outer.this.outerDo();
+        }
+    }
+}
 
+```
+##### 内部类和静态内部类的区别
+根据Oracle官方的说法：
+>Nested classes are divided into two categories: static and non-static. Nested classes that are declared static are called static nested classes. Non-static nested classes are called inner classes.
 
-## 前言
+从字面上看，一个被称为静态嵌套类，一个被称为内部类。
 
-Hux 的 Blog 就这么开通了。
+嵌套的意思，是我完全可以独立存在，但我就是想借你的壳用一下，隐藏一下我自己。它是一个独立的类，完全是形式上的“内部”，和外部类没有本质上“内外”的关系。
 
-[跳过废话，直接看技术实现 ](#build) 
+而成员内部类和静态内部类不同的是，每一个成员内部类的实例都依赖一个外部类的实例。其它类使用内部类必须要先创建一个外部类的实例。成员内部类和外部类的关联更强一点.
 
+成员内部类不能定义静态方法和变量（final修饰的除外）。
+1. 非static的内部类，在外部类加载的时候，并不会加载它，所以它里面不能有静态变量或者静态方法。
 
+>1、static类型的属性和方法，在类加载的时候就会存在于内存中。
+>
+>2、要使用某个类的static属性或者方法，那么这个类必须要加载到jvm中。
+基于以上两点，可以看出，如果一个非static的内部类如果具有static的属性或者方法，那么就会出现一种情况：内部类未加载，但是却试图在内存中创建static的属性和方法，这当然是错误的。原因：类还不存在，但却希望操作它的属性和方法。
 
-2015 年，Hux 总算有个地方可以好好写点东西了。
+2. java很多想这类不能共同存在的 一般都与他们的生命周期有关。
+比如 静态成员和静态方法是随着类的加载而存在的，也就是说内部类的静态属性是随着类的加载的，但是内部类的实例 是创建后才存在的，也就是说其静态属性优先存在于他的类实例的存在 这显然是矛盾的，所以要把内部类设为静态的 这样他们的生命周期就是相同了；
 
+3. 如果内部类没有static的话，就需要实例化内部类才能调用，说明非static的内部类不是自动跟随主类加载的，而是被实例化的时候才会加载。
+而static的语义，就是主类能直接通过内部类名来访问内部类中的static方法，而非static的内部类又是不会自动加载的，所以这时候内部类也要static，否则会前后冲突。
 
-作为一个程序员， Blog 这种轮子要是挂在大众博客程序上就太没意思了。一是觉得大部分 Blog 服务都太丑，二是觉得不能随便定制不好玩。之前因为太懒没有折腾，结果就一直连个写 Blog 的地儿都没有。
-
-在玩了一段时间知乎之后，答题的快感又激起了我开博客的冲动。之前的[个人网站](http://huangxuan.me/portfolio)是作品集形式的（现在集成进来了），并不适合用来写博文，一不做二不休，花一天搞一个吧！
-
-
-<p id = "build"></p>
----
-
-## 正文
-
-接下来说说搭建这个博客的技术细节。  
-
-正好之前就有关注过 [GitHub Pages](https://pages.github.com/) + [Jekyll](http://jekyllrb.com/) 快速 Building Blog 的技术方案，非常轻松时尚。
-
-其优点非常明显：
-
-* **Markdown** 带来的优雅写作体验
-* 非常熟悉的 Git workflow ，**Git Commit 即 Blog Post**
-* 利用 GitHub Pages 的域名和免费无限空间，不用自己折腾主机
-	* 如果需要自定义域名，也只需要简单改改 DNS 加个 CNAME 就好了 
-* Jekyll 的自定制非常容易，基本就是个模版引擎
-
-
-本来觉得最大的缺点可能是 GitHub 在国内访问起来太慢，所以第二天一起床就到 GitCafe(Chinese GitHub Copy，现在被 Coding 收购了) 迁移了一个[镜像](http://huxpro.coding.me)出来，结果还是巨慢。
-
-哥哥可是个前端好嘛！ 果断开 Chrome DevTool 查了下网络请求，原来是 **pending 在了 Google Fonts** 上，页面渲染一直被阻塞到请求超时为止，难怪这么慢。  
-忍痛割爱，只好把 Web Fonts 去了（反正超时看到的也只能是 fallback ），果然一下就正常了，而且 GitHub 和 GitCafe 对比并没有感受到明显的速度差异，虽然 github 的 ping 值明显要高一些，达到了 300ms，于是用 DNSPOD 优化了一下速度。
-
-
-
----
-
-配置的过程中也没遇到什么坑，基本就是 Git 的流程，相当顺手
-
-大的 Jekyll 主题上直接 fork 了 Clean Blog（这个主题也相当有名，就不多赘述了。唯一的缺点大概就是没有标签支持，于是我给它补上了。）
-
-本地调试环境需要 `gem install jekyll`，结果 rubygem 的源居然被墙了……后来手动改成了我大淘宝的镜像源才成功
-
-Theme 的 CSS 是基于 Bootstrap 定制的，看得不爽的地方直接在 Less 里改就好了（平时更习惯 SCSS 些），**不过其实我一直觉得 Bootstrap 在移动端的体验做得相当一般，比我在淘宝参与的团队 CSS 框架差多了……**所以为了体验，也补了不少 CSS 进去
-
-最后就进入了耗时反而最长的**做图、写字**阶段，也算是进入了**写博客**的正轨，因为是类似 Hack Day 的方式去搭这个站的，所以折腾折腾着大半夜就过去了。
-
-第二天考虑中文字体的渲染，fork 了 [Type is Beautiful](http://www.typeisbeautiful.com/) 的 `font` CSS，调整了字号，适配了 Win 的渣渲染，中英文混排效果好多了。
-
-
-## 后记
-
-回顾这个博客的诞生，纯粹是出于个人兴趣。在知乎相关问题上回答并获得一定的 star 后，我决定把这个博客主题当作一个小小的开源项目来维护。
-
-在经历 v1.0 - v1.5 的蜕变后，这个博客主题愈发完整，不但增加了诸多 UI 层的优化（opinionated）；在代码层面，更加丰富的配置项也使得这个主题拥有了更好的灵活性与可拓展性。而作为一个开源项目，我也积极的为其完善文档与解决 issue。
-
-如果你恰好逛到了这里，希望你也能喜欢这个博客主题。
-
-—— Hux 后记于 2015.10
-
-
+**一个类需要被定义成static的，只有一种情况，就是静态内部类。**
