@@ -1,0 +1,330 @@
+---
+layout:     post
+title:      "枚举"
+subtitle:   " \"我们能用枚举做什么\""
+date:       2019-01-09 12:00:00
+author:     "ALID"
+header-img: "img/post-bg-2015.jpg"
+catalog: true
+tags:
+    - 枚举
+    - java
+---
+## 1. 定义
+
+枚举类型（`enum type`）是指由一组固定的常量组成合法的类型。`Java`中由关键字`enum`来定义一个枚举类型。下面就是`java`枚举类型的定义。
+
+```
+public enum Season {
+    SPRING, SUMMER, AUTUMN, WINER;
+}
+```
+
+
+## 2. 特点
+
+`Java`定义枚举类型的语句很简约。它有以下特点：
+
+> 1) 使用关键字`enum` 
+> 
+> 2) 类型名称，比如这里的`Season`
+> 
+> 3) 一串允许的值，比如上面定义的春夏秋冬四季 4) 枚举可以单独定义在一个文件中，也可以嵌在其它`Java`类中
+
+除了这样的基本要求外，用户还有一些其他选择
+
+> 5) 枚举可以实现一个或多个接口（Interface）
+> 
+> 6) 可以定义新的变量
+> 
+> 7) 可以定义新的方法
+> 
+> 8) 可以定义根据具体枚举值而相异的类
+
+## 3. 用法
+
+### 常量
+
+```
+public enum Color {  
+  RED, GREEN, BLANK, YELLOW  
+}  
+```
+
+
+### switch
+
+```
+enum Signal {  
+    GREEN, YELLOW, RED  
+}  
+public class TrafficLight {  
+    Signal color = Signal.RED;  
+    public void change() {  
+        switch (color) {  
+        case RED:  
+            color = Signal.GREEN;  
+            break;  
+        case YELLOW:  
+            color = Signal.RED;  
+            break;  
+        case GREEN:  
+            color = Signal.YELLOW;  
+            break;  
+        }  
+    }  
+}  
+```
+
+
+### 向枚举中添加新方法
+
+```
+public enum Color {  
+    RED("红色", 1), GREEN("绿色", 2), BLANK("白色", 3), YELLO("黄色", 4);  
+    // 成员变量  
+    private String name;  
+    private int index;  
+    // 构造方法  
+    private Color(String name, int index) {  
+        this.name = name;  
+        this.index = index;  
+    }  
+    // 普通方法  
+    public static String getName(int index) {  
+        for (Color c : Color.values()) {  
+            if (c.getIndex() == index) {  
+                return c.name;  
+            }  
+        }  
+        return null;  
+    }  
+    // get set 方法  
+    public String getName() {  
+        return name;  
+    }  
+    public void setName(String name) {  
+        this.name = name;  
+    }  
+    public int getIndex() {  
+        return index;  
+    }  
+    public void setIndex(int index) {  
+        this.index = index;  
+    }  
+}  
+```
+
+
+### 覆盖枚举的方法
+
+```
+public enum Color {  
+    RED("红色", 1), GREEN("绿色", 2), BLANK("白色", 3), YELLO("黄色", 4);  
+    // 成员变量  
+    private String name;  
+    private int index;  
+    // 构造方法  
+    private Color(String name, int index) {  
+        this.name = name;  
+        this.index = index;  
+    }  
+    //覆盖方法  
+    @Override  
+    public String toString() {  
+        return this.index+"_"+this.name;  
+    }  
+}  
+```
+
+
+### 实现接口
+
+```
+public interface Behaviour {  
+    void print();  
+    String getInfo();  
+}  
+public enum Color implements Behaviour{  
+    RED("红色", 1), GREEN("绿色", 2), BLANK("白色", 3), YELLO("黄色", 4);  
+    // 成员变量  
+    private String name;  
+    private int index;  
+    // 构造方法  
+    private Color(String name, int index) {  
+        this.name = name;  
+        this.index = index;  
+    }  
+//接口方法  
+    @Override  
+    public String getInfo() {  
+        return this.name;  
+    }  
+    //接口方法  
+    @Override  
+    public void print() {  
+        System.out.println(this.index+":"+this.name);  
+    }  
+}  
+```
+
+
+### 使用接口组织枚举
+
+```
+public interface Food {  
+    enum Coffee implements Food{  
+        BLACK_COFFEE,DECAF_COFFEE,LATTE,CAPPUCCINO  
+    }  
+    enum Dessert implements Food{  
+        FRUIT, CAKE, GELATO  
+    }  
+}
+```
+
+
+## 4. 最好的单例实现方法
+
+> **Effective Java**作者`Josh Bloch` 提倡使用枚举的方式实现单例
+
+### 保证线程安全
+
+简单的写一个枚举：
+
+```
+public enum t {
+    SPRING,SUMMER,AUTUMN,WINTER;
+}
+
+```
+
+
+反编译后代码内容如下：
+
+```
+public final class T extends Enum
+{
+    private T(String s, int i)
+    {
+        super(s, i);
+    }
+    public static T[] values()
+    {
+        T at[];
+        int i;
+        T at1[];
+        System.arraycopy(at = ENUM$VALUES, 0, at1 = new T[i = at.length], 0, i);
+        return at1;
+    }
+
+    public static T valueOf(String s)
+    {
+        return (T)Enum.valueOf(demo/T, s);
+    }
+
+    public static final T SPRING;
+    public static final T SUMMER;
+    public static final T AUTUMN;
+    public static final T WINTER;
+    private static final T ENUM$VALUES[];
+    static
+    {
+        SPRING = new T("SPRING", 0);
+        SUMMER = new T("SUMMER", 1);
+        AUTUMN = new T("AUTUMN", 2);
+        WINTER = new T("WINTER", 3);
+        ENUM$VALUES = (new T[] {
+            SPRING, SUMMER, AUTUMN, WINTER
+        });
+    }
+}
+
+```
+
+
+通过反编译后代码可以看到，**`public final class T extends Enum`**，说明，该类是继承了Enum类的，同时final关键字告诉我们，这个类也是不能被继承的。当我们使用`enmu`来定义一个枚举类型的时候，编译器会自动帮我们创建一个final类型的类继承Enum类,所以枚举类型不能被继承，我们看到这个类中有几个属性和方法。
+
+```
+        public static final T SPRING;
+        public static final T SUMMER;
+        public static final T AUTUMN;
+        public static final T WINTER;
+        private static final T ENUM$VALUES[];
+        static
+        {
+            SPRING = new T("SPRING", 0);
+            SUMMER = new T("SUMMER", 1);
+            AUTUMN = new T("AUTUMN", 2);
+            WINTER = new T("WINTER", 3);
+            ENUM$VALUES = (new T[] {
+                SPRING, SUMMER, AUTUMN, WINTER
+            });
+        }
+
+```
+
+> 可以看到都是static类型的，因为static类型的属性会在类被加载之后被初始化，而又因为当一个Java类第一次被真正使用到的时候静态资源被初始化、Java类的加载和初始化过程都是线程安全的。所以，**创建一个enum类型是线程安全的**。
+
+### 优势
+
+**1.枚举写法简单**
+
+这个毋庸置疑 没啥好说的
+
+**2. 枚举自己处理序列化**
+
+普通单例在实现序列化接口(Serializable)的时候 就不再是单例了 而使用单例则不会出现这种情况
+
+**3.枚举实例创建是thread-safe(线程安全的)**
+
+这点刚刚也提到了
+
+## 5. 使用枚举实现工厂模式
+除了使用反射以外 使用枚举也可以实现工厂方法 而且效率要高于反射
+```java
+//枚举类
+public enum ModuleEnum {
+
+    //在线课程
+    COURSE("0", "course", "courseindex"){
+        @Override
+        public ISearchService build() {
+            return  new CourseSearch();
+        }
+    },
+    //培训活动
+    ACTIVITY("1", "activity", "activityindex") {
+        @Override
+        public ISearchService build() {
+            return  new AlbumSearch();
+        }
+    },
+    //知识库
+    ALBUM("2", "album", "albumindex") {
+        @Override
+        public ISearchService build() {
+            return new AlbumSearch();
+        }
+    },
+    //博客
+    BLOG("3", "blog", "blogindex") {
+        @Override
+        public ISearchService build() {
+            return new BlogSearch();
+        }
+    };
+
+    public abstract ISearchService build();
+}
+```
+可以看到,我定义了一个抽象的build方法,返回实现类的接口,而在每个枚举类中又实现了build方法 返回不同的实现类.
+```java
+//调用者
+ISearchService isearchservice = ModuleEnum.build();
+if (isearchservice == null) {
+    //防御性判断
+    throw new RuntimeException("不支持的模块类型" + ModuleEnum.getName());
+}
+return isearchservice;
+```
+这里通过调用build方法来实现工厂方法的调用
