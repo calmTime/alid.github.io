@@ -14,7 +14,7 @@ tags:
 
 枚举类型（`enum type`）是指由一组固定的常量组成合法的类型。`Java`中由关键字`enum`来定义一个枚举类型。下面就是`java`枚举类型的定义。
 
-```
+```java
 public enum Season {
     SPRING, SUMMER, AUTUMN, WINER;
 }
@@ -45,7 +45,7 @@ public enum Season {
 
 **常量**
 
-```
+```java
 public enum Color {  
   RED, GREEN, BLANK, YELLOW  
 }  
@@ -54,7 +54,7 @@ public enum Color {  
 
 **switch**
 
-```
+```java
 enum Signal {  
     GREEN, YELLOW, RED  
 }  
@@ -79,7 +79,7 @@ public class TrafficLight {  
 
 **向枚举中添加新方法**
 
-```
+```java
 public enum Color {  
     RED("红色", 1), GREEN("绿色", 2), BLANK("白色", 3), YELLO("黄色", 4);  
     // 成员变量  
@@ -118,7 +118,7 @@ public enum Color {  
 
 **覆盖枚举的方法**
 
-```
+```java
 public enum Color {  
     RED("红色", 1), GREEN("绿色", 2), BLANK("白色", 3), YELLO("黄色", 4);  
     // 成员变量  
@@ -140,7 +140,7 @@ public enum Color {  
 
 **实现接口**
 
-```
+```java
 public interface Behaviour {  
     void print();  
     String getInfo();  
@@ -171,7 +171,7 @@ public enum Color implements Behaviour{  
 
 **使用接口组织枚举**
 
-```
+```java
 public interface Food {  
     enum Coffee implements Food{  
         BLACK_COFFEE,DECAF_COFFEE,LATTE,CAPPUCCINO  
@@ -191,7 +191,7 @@ public interface Food {  
 
 简单的写一个枚举：
 
-```
+```java
 public enum t {
     SPRING,SUMMER,AUTUMN,WINTER;
 }
@@ -201,7 +201,7 @@ public enum t {
 
 反编译后代码内容如下：
 
-```
+```java
 public final class T extends Enum
 {
     private T(String s, int i)
@@ -244,7 +244,7 @@ public final class T extends Enum
 
 通过反编译后代码可以看到，**`public final class T extends Enum`**，说明，该类是继承了Enum类的，同时final关键字告诉我们，这个类也是不能被继承的。当我们使用`enmu`来定义一个枚举类型的时候，编译器会自动帮我们创建一个final类型的类继承Enum类,所以枚举类型不能被继承，我们看到这个类中有几个属性和方法。
 
-```
+```java
         public static final T SPRING;
         public static final T SUMMER;
         public static final T AUTUMN;
