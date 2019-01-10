@@ -43,7 +43,7 @@ public enum Season {
 
 ## 3. 用法
 
-*常量*
+**常量**
 
 ```
 public enum Color {  
@@ -52,7 +52,7 @@ public enum Color {  
 ```
 
 
-*switch*
+**switch**
 
 ```
 enum Signal {  
@@ -77,7 +77,7 @@ public class TrafficLight {  
 ```
 
 
-*向枚举中添加新方法*
+**向枚举中添加新方法**
 
 ```
 public enum Color {  
@@ -116,7 +116,7 @@ public enum Color {  
 ```
 
 
-*覆盖枚举的方法*
+**覆盖枚举的方法**
 
 ```
 public enum Color {  
@@ -138,7 +138,7 @@ public enum Color {  
 ```
 
 
-*实现接口*
+**实现接口**
 
 ```
 public interface Behaviour {  
@@ -169,7 +169,7 @@ public enum Color implements Behaviour{  
 ```
 
 
-*使用接口组织枚举*
+**使用接口组织枚举**
 
 ```
 public interface Food {  
@@ -187,7 +187,7 @@ public interface Food {  
 
 > **Effective Java**作者`Josh Bloch` 提倡使用枚举的方式实现单例
 
-*保证线程安全*
+**保证线程安全**
 
 简单的写一个枚举：
 
@@ -265,7 +265,7 @@ public final class T extends Enum
 
 > 可以看到都是static类型的，因为static类型的属性会在类被加载之后被初始化，而又因为当一个Java类第一次被真正使用到的时候静态资源被初始化、Java类的加载和初始化过程都是线程安全的。所以，**创建一个enum类型是线程安全的**。
 
-*优势*
+**优势**
 
 **1.枚举写法简单**
 
