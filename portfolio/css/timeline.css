@@ -188,6 +188,7 @@ body, html {
 .navbar-custom .nav li a:hover,
 .navbar-custom .navbar-brand,
 .navbar-custom .navbar-brand:hover {color:#777;}
+.navbar-custom .navbar-alid:hover {opacity:1;}
 .navbar-default .navbar-toggle .icon-bar {background-color:#777;}
 
 html{
