@@ -948,20 +948,12 @@ samp {
     -moz-transition: -moz-transform 0.3s;
     transition: transform 0.3s;
   }
-  .navbar-custom.is-fixed .navbar-brand>.navbar-alid {
-      background-image: url("/img/alid-w.png");
-  }
-  .navbar-custom.is-fixed .navbar-brand>.navbar-alid:hover,
-  .navbar-custom.is-fixed .navbar-brand>.navbar-alid:focus {
-      opacity: 1;
-  }
-
   .navbar-custom.is-fixed .navbar-brand {
-    color: #404040;
+      background-image: url("/img/alid-w.png");
   }
   .navbar-custom.is-fixed .navbar-brand:hover,
   .navbar-custom.is-fixed .navbar-brand:focus {
-    color: #0085a1;
+      opacity: 1;
   }
   .navbar-custom.is-fixed .nav li a {
     color: #404040;
