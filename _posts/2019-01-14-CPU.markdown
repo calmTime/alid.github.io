@@ -1,0 +1,48 @@
+---
+layout:     post
+title:      "CPU暴增问题处理记录 "
+subtitle:   "记录一次线上问题处理"
+date:       2019-01-14
+author:     "ALID"
+header-img: "img/post-bg-rwd.jpg"
+catalog: true
+tags:
+    - jvm
+    - java
+---
+> CPU暴增问题处理记录
+
+
+## 问题记录
+> 定时任务运行时CPU，1min内达到100%，而内存占用非常少。
+
+![img](/img/in-post/post-cpu/watcher.png)
+
+## 问题解决过程
+> 首先在确定代码没有明显问题的情况下，考虑复现问题。
+```shell
+sudo -u tomcat jstack -F <pid> 
+top -Hp <pid>
+```
+
+通过这两种方式查看实时信息找到占用CPU较大的线程来解决问题
+
+通过查看当时占用CPU较高的线程GC线程
+
+
+![img](/img/in-post/post-cpu/gc_log.png)
+
+之后，考虑查询GC日志来查询问题，发现大量的Full GC记录。
+但是明明内存没有占满为什么会出现大量GC线程在等待，导致CPU爆满。
+再考虑到使用的是新加的机器运行代码，考虑检查Jvm配置问题。
+```shell
+#export JAVA_OPTS="-Xms2g -Xmx2g -XX:NewSize=256m -XX:PermSize=256m -Xss256k
+```
+发现机器使用的是默认的Jvm配置，因为我们业务线的特殊情况处理数据量较大，申请的机器内存较大，使用公司默认的配置导致大量内存没有被使用。造成了没有死锁情况下CPU爆满但内存大量剩余的情况。
+
+## 更好的使用内存
+使用消耗性处理
+```java
+S1 source = matchingMap.remove(targetEntry.getKey()); // 消耗性匹配
+```
+
