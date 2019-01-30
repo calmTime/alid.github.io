@@ -42,6 +42,6 @@ top -Hp <pid>
 ## 更好的使用内存
 使用消耗性处理
 ```java
-S1 source = matchingMap.remove(targetEntry.getKey()); // 消耗性匹配
+T source = matchingMap.remove(targetEntry.getKey()); // 消耗性匹配
 ```
 
