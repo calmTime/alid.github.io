@@ -856,18 +856,6 @@ samp {
   font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Arial", "PingFang SC", "Hiragino Sans GB", "STHeiti", "Microsoft YaHei", "Microsoft JhengHei", "Source Han Sans SC", "Noto Sans CJK SC", "Source Han Sans CN", "Noto Sans SC", "Source Han Sans TC", "Noto Sans CJK TC", "WenQuanYi Micro Hei", SimSun, sans-serif;
   line-height: 1.7;
 }
-.navbar-custom .navbar-brand {
-  background-image: url("/img/alid-w.png");
-  width: 7%;
-  margin-left: 1%;
-  opacity: .85;
-  cursor: pointer;
-  display: block;
-  font-weight: 800;
-  color: white;
-  height: 56px;
-  line-height: 25px;
-}
 .navbar-custom .navbar-brand:hover {
   color: rgba(255, 255, 255, 0.8);
 }
@@ -1656,4 +1644,17 @@ img::-moz-selection {
 .MathJax_SVG_Display {
   overflow: auto;
   -webkit-overflow-scrolling: touch;
+}
+
+.navbar-custom .navbar-brand {
+  background-image: url("/img/alid-w.png");
+  width: 7%;
+  margin-left: 1%;
+  opacity: .85;
+  cursor: pointer;
+  display: block;
+  font-weight: 800;
+  color: white;
+  height: 56px;
+  line-height: 25px;
 }
