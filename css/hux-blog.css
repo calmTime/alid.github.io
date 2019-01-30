@@ -1659,15 +1659,4 @@ img::-moz-selection {
   line-height: 25px;
 }
 
-#style-navbar-brand{
-  background-image: url("/img/alid-w.png");
-  width: 7%;
-  margin-left: 1%;
-  opacity: .85;
-  cursor: pointer;
-  display: block;
-  font-weight: 800;
-  color: white;
-  height: 56px;
-  line-height: 25px;
-}
+
