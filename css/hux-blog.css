@@ -963,7 +963,6 @@ samp {
     transition: transform 0.3s;
   }
   .navbar-custom.is-fixed .navbar-brand {
-    background-image: url("/img/alid-b.png");
     color: #404040;
   }
   .navbar-custom.is-fixed .navbar-brand:hover,
