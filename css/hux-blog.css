@@ -1,6 +1,6 @@
 /*!
- * Hux Blog v1.7.0 (http://huxpro.github.io)
- * Copyright 2018 Hux <huxpro@gmail.com>
+ * Hux Blog v1.8.0 (https://calmtime.github.io/)
+ * Copyright 2019 alid
  */
 
 @media (min-width: 1200px) {
@@ -184,7 +184,7 @@
     Multi-line snackbar height: 80 dp
     Text: Roboto Regular 14 sp
     Action button: Roboto Medium 14 sp, all-caps text
-    Default background fill: #323232 100%
+    Default background fill: #323232 100%  
   */
     left: 0px;
     right: 0px;
@@ -841,6 +841,14 @@ samp {
     -webkit-transition: opacity 450ms cubic-bezier(0.23, 1, 0.32, 1) 205ms;
   }
 }
+.navbar-brand {
+  background-image: url("/img/alid-w.png");
+  width: 7%;
+  margin-left: 1%;
+  opacity: .85;
+  cursor: pointer;
+  display: block;
+}
 .navbar-custom {
   background: none;
   border: none;
@@ -855,6 +863,18 @@ samp {
      */
   font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Arial", "PingFang SC", "Hiragino Sans GB", "STHeiti", "Microsoft YaHei", "Microsoft JhengHei", "Source Han Sans SC", "Noto Sans CJK SC", "Source Han Sans CN", "Noto Sans SC", "Source Han Sans TC", "Noto Sans CJK TC", "WenQuanYi Micro Hei", SimSun, sans-serif;
   line-height: 1.7;
+}
+.navbar-custom .navbar-brand {
+  background-image: url("/img/alid-w.png");
+  width: 7%;
+  margin-left: 1%;
+  opacity: .85;
+  cursor: pointer;
+  display: block;
+  font-weight: 800;
+  color: white;
+  height: 56px;
+  line-height: 25px;
 }
 .navbar-custom .navbar-brand:hover {
   color: rgba(255, 255, 255, 0.8);
@@ -943,11 +963,11 @@ samp {
     transition: transform 0.3s;
   }
   .navbar-custom.is-fixed .navbar-brand {
-      background-image: url("/img/alid-w.png");
+    color: #404040;
   }
   .navbar-custom.is-fixed .navbar-brand:hover,
   .navbar-custom.is-fixed .navbar-brand:focus {
-      opacity: 1;
+    color: #0085a1;
   }
   .navbar-custom.is-fixed .nav li a {
     color: #404040;
@@ -1645,18 +1665,3 @@ img::-moz-selection {
   overflow: auto;
   -webkit-overflow-scrolling: touch;
 }
-
-.navbar-custom .navbar-brand {
-  background-image: url("/img/alid-w.png");
-  width: 7%;
-  margin-left: 1%;
-  opacity: .85;
-  cursor: pointer;
-  display: block;
-  font-weight: 800;
-  color: white;
-  height: 56px;
-  line-height: 25px;
-}
-
-
