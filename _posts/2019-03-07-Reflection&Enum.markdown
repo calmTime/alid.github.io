@@ -26,7 +26,6 @@ tags:
 方法:
 1. getFields()只能获取public的字段，包括父类的。
 2. getDeclaredFields()只能获取自己声明的各种字段，包括public，protected，private。
-![img](/img/in-post/field/field.jpeg)
 
 **case**
 测试类:
