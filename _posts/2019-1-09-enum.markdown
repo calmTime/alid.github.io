@@ -29,7 +29,9 @@ public enum Season {
 > 
 > 2) 类型名称，比如这里的`Season`
 > 
-> 3) 一串允许的值，比如上面定义的春夏秋冬四季 4) 枚举可以单独定义在一个文件中，也可以嵌在其它`Java`类中
+> 3) 一串允许的值，比如上面定义的春夏秋冬四季 
+> 
+> 4) 枚举可以单独定义在一个文件中，也可以嵌在其它`Java`类中
 
 除了这样的基本要求外，用户还有一些其他选择
 
@@ -62,14 +64,14 @@ public class TrafficLight {
     Signal color = Signal.RED;
     public void change() {
         switch (color) {
-            case RED:
-            color = Signal.GREEN;
-            break;
-            case YELLOW:
-            color = Signal.RED;
-            break;
-            case GREEN:
-            color = Signal.YELLOW;
+        case RED:
+        color = Signal.GREEN;
+        break;
+        case YELLOW:
+        color = Signal.RED;
+        break;
+        case GREEN:
+        color = Signal.YELLOW;
         break;
         }
     }
@@ -97,7 +99,7 @@ public enum Color {
                 return c.name;
             }
         }
-    return null;
+        return null;
     }
     // get set 方法
     public String getName() {
@@ -205,12 +207,10 @@ public enum t{
 ```java
 public final class T extends Enum
 {
-    private T(String s, int i)
-    {
+    private T(String s, int i){
         super(s, i);
     }
-    public static T[] values()
-    {
+    public static T[] values(){
         T at[];
         int i;
         T at1[];
@@ -218,8 +218,7 @@ public final class T extends Enum
         return at1;
     }
 
-    public static T valueOf(String s)
-    {
+    public static T valueOf(String s){
         return (T)Enum.valueOf(demo/T, s);
     }
 
@@ -228,8 +227,7 @@ public final class T extends Enum
     public static final T AUTUMN;
     public static final T WINTER;
     private static final T ENUM$VALUES[];
-    static
-    {
+    static{
         SPRING = new T("SPRING", 0);
         SUMMER = new T("SUMMER", 1);
         AUTUMN = new T("AUTUMN", 2);
