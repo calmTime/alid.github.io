@@ -4,7 +4,7 @@ title:      "反射获取Field"
 subtitle:   "记录一次遇到反射获取不到Field的问题"
 date:       2019-03-07
 author:     "ALID"
-header-img: "post-bg-infinity.jpg"
+header-img: "img/post-bg-infinity.jpg"
 catalog: true
 tags:
     - case
@@ -26,7 +26,7 @@ tags:
 方法:
 1. getFields()只能获取public的字段，包括父类的。
 2. getDeclaredFields()只能获取自己声明的各种字段，包括public，protected，private。
-![img](/img/in-post/field/filds.jpeg)
+![img](/img/in-post/field/field.jpeg)
 
 **case**
 测试类:
