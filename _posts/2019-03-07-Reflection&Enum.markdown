@@ -13,8 +13,6 @@ tags:
     - enum
 ---
 
-## 反射
-
 ### 知识准备
 > `java.lang.reflect.Field` 为我们提供了获取当前对象的成员变量的类型，和重新设值的方法
 
@@ -26,6 +24,7 @@ tags:
 方法:
 1. getFields()只能获取public的字段，包括父类的。
 2. getDeclaredFields()只能获取自己声明的各种字段，包括public，protected，private。
+    ...
 
 #### case
 测试类:
