@@ -15,7 +15,7 @@ tags:
 
 ## 反射
 
-#### Field
+### 知识准备
 > `java.lang.reflect.Field` 为我们提供了获取当前对象的成员变量的类型，和重新设值的方法
 
 可以做到:
@@ -27,7 +27,7 @@ tags:
 1. getFields()只能获取public的字段，包括父类的。
 2. getDeclaredFields()只能获取自己声明的各种字段，包括public，protected，private。
 
-**case**
+#### case
 测试类:
 ```java
 public class FieldTest<T> {
@@ -65,6 +65,11 @@ Type：java.lang.Object //泛型 T 类型，运行时被擦除为 Object
 GenericType:T
 ```
 
+#### tips
+1. 在赋值的时候注意类型, 如果是包装类需要赋值对应类型, 因为在使用反射获取或者修改一个变量的值时，编译器不会进行自动装/拆箱。
+2. 注意变量类型, 以及变量属于父类还是子类。
+
+### 问题描述
 > 枚举实现抽象方法获取field
 
 ```java
@@ -105,6 +110,8 @@ for (Field field : aClass.getDeclaredFields()) {
    "info": "趣拿软件_Q013C_1"
 },
 ```
+
+### 问题解决
 
 **但是我在枚举中实现了抽象方法，对于每个枚举值来说，使用内部类实现**
 导致了我直接getClass()获取到的是内部类的类类型，不能获取到枚举的详情，所以考虑获取其父类即我所需要的枚举（正常的枚举类的父类是Enum）
