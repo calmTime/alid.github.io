@@ -26,13 +26,12 @@ tags:
 方法:
 1. getFields()只能获取public的字段，包括父类的。
 2. getDeclaredFields()只能获取自己声明的各种字段，包括public，protected，private。
-
+![img](/img/in-post/field/filds.jpeg)
 
 **case**
 测试类:
 ```java
 public class FieldTest<T> {
-    public boolean[][] b = {{true, true}, {false, false}};
     public String name = "test";
     public Integer integer = 23;
     public T type;
@@ -54,10 +53,6 @@ public void field() {
 ```
 输出:
 ```
-FieldTest：b
-Type：boolean[][]
-GenericType:class [[Z
-
 FieldTest：name
 Type：java.lang.String
 GenericType:class java.lang.String
