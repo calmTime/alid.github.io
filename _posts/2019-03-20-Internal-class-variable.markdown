@@ -1,10 +1,10 @@
 ---
 layout:     post
-Title:      “Java的Lambda中的变量”
-subtitle:   “从Stream.foreach的计数器说起”
+Title:      "Java的Lambda中的变量"
+subtitle:   "从Stream.foreach的计数器说起"
 date:       2019-03-07
-author:     “ALID”
-header-img: “img/home-bg-o.jpg”
+author:     "ALID"
+header-img: "img/home-bg-o.jpg"
 catalog: true
 tags:
     - case
@@ -15,10 +15,10 @@ tags:
 
 ### 知识准备
 1. Java中闭包的实现在没有Lambda的时候是使用匿名内部类的方式，Java8中新增的Lambda取代了部分匿名内部类，同样实现了闭包。
-2. Java的匿名内部类和lambda表达式都是 **只有值捕获(capture-by-value)** 只需要在创建闭包的地方把捕获的值拷贝一份到对象里即可。与之相对的是 **有引用捕获(capture-by-reference)** 把被捕获的局部变量“提升”（hoist）到对象里。C#的匿名函数（匿名委托/lambda表达式）就是这样实现的。[参考](https://www.zhihu.com/question/28190927/answer/39786939)
+2. Java的匿名内部类和lambda表达式都是 **只有值捕获(capture-by-value)** 只需要在创建闭包的地方把捕获的值拷贝一份到对象里即可。与之相对的是 **有引用捕获(capture-by-reference)** 把被捕获的局部变量“提升”（hoist）到对象里。C#的匿名函数（匿名委托/lambda表达式）就是这样实现的。[[参考]](https://www.zhihu.com/question/28190927/answer/39786939)
 3. 如果变量（variable）是**不可变(immutable)**的，那么使用者无法感知值捕获和引用捕获的区别。
 4. Java只是不允许改变被lambda表达式捕获的变量，并没有限制这些变量所指向的对象的状态能不能变，原因是因为Java是值传递。
-5. 关于Java的值传递。无论是基本类型和是引用类型，在实参传入形参时，都是值传递，**也就是说传递的都是一个副本，而不是内容本身。**对于引用变量传入的是堆中地址的副本，对于基础变量直接拷贝值传入。[参考](https://juejin.im/post/5bce68226fb9a05ce46a0476)
+5. 关于Java的值传递。无论是基本类型和是引用类型，在实参传入形参时，都是值传递，**也就是说传递的都是一个副本，而不是内容本身。**对于引用变量传入的是堆中地址的副本，对于基础变量直接拷贝值传入。[[参考]](https://juejin.im/post/5bce68226fb9a05ce46a0476)
 6. 关于原子类型…
 
 ### CASE
