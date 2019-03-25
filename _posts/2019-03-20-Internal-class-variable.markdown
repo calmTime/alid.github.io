@@ -1,6 +1,6 @@
 ---
 layout:     post
-Title:      "Java的Lambda中的变量"
+title:      "Java的Lambda中的变量"
 subtitle:   "从Stream.foreach的计数器说起"
 date:       2019-03-07
 author:     "ALID"
