@@ -2,7 +2,7 @@
 layout:     post
 title:      "Java的Lambda中的变量"
 subtitle:   "从Stream.foreach的计数器说起"
-date:       2019-03-07
+date:       2019-03-20
 author:     "ALID"
 header-img: "img/home-bg-o.jpg"
 catalog: true
