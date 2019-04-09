@@ -62,33 +62,37 @@ HashMap<Range<DateTime>, String> range, DateTime dateTime) {
 对于插入的情况，Guava采用了后插入的区间覆盖前区间的方法，如果有重叠的情况，则删除前区间的重叠部分，保留新插入的部分。
 3. get的时候要高效获取
 获取的时候因为是找区间所以不能直接获取，也不能使用想我的test一样使用遍历寻找的方法。`TreeRangeMap`的实现就使用了`TreeMap`的数据结构。可以获得较好的插入和获取时间。
+
 ### init
+
 ```java
-private final NavigableMap<Cut<K>, RangeMapEntry<K, V>> entriesByLowerBound; //初始化存储结构
+//初始化存储结构
+private final NavigableMap<Cut<K>, RangeMapEntry<K, V>> entriesByLowerBound; 
 ```
 
 ```java
 public static <K extends Comparable, V> TreeRangeMap<K, V> create() {
-	// 使用Guava常用的模式，通过方法来创建对象
+  // 使用Guava常用的模式，通过方法来创建对象
   return new TreeRangeMap<K, V>(); 
 }
 
 private TreeRangeMap() {
-	// 可以看到就是创建了一个 TreeMap
+  // 可以看到就是创建了一个 TreeMap
   this.entriesByLowerBound = Maps.newTreeMap(); 
 }
 ```
 
 ```java
-private static final class RangeMapEntry<K extends Comparable, V> extends AbstractMapEntry<Range<K>, V> {
-	// NavigableMap<Cut<K>, RangeMapEntry<K, V>> 中的Value结构
-	// 继承AbstractMapEntry<Range<K>, V>
+private static final class RangeMapEntry<K extends Comparable, V> 
+    extends AbstractMapEntry<Range<K>, V> { 
+  // NavigableMap<Cut<K>, RangeMapEntry<K, V>> 中的Value结构
+  // 继承AbstractMapEntry<Range<K>, V>
   private final Range<K> range; 	// key为Range
   private final V value;	
 
 	RangeMapEntry(Cut<K> lowerBound, Cut<K> upperBound, V value) {
   		this(Range.create(lowerBound, upperBound), value);
-}
+    }
 
 	RangeMapEntry(Range<K> range, V value) {
   		this.range = range;
@@ -107,7 +111,9 @@ public void put(Range<K> range, V value) {
   if (!range.isEmpty()) {
     checkNotNull(value);
     remove(range); // 判断是否有重叠情况，并处理
-    entriesByLowerBound.put(range.lowerBound, new RangeMapEntry<K, V>(range, value)); // key为区间最小值
+    // key为区间最小值
+    entriesByLowerBound.put(range.lowerBound, 
+        new RangeMapEntry<K, V>(range, value));
   }
 }
 ```
@@ -115,22 +121,23 @@ public void put(Range<K> range, V value) {
 ### remove
 ```java
 // 获取rangeToRemove低点所覆盖已有Range
-Map.Entry<Cut<K>, RangeMapEntry<K, V>> mapEntryBelowToTruncate = entriesByLowerBound.lowerEntry(rangeToRemove.lowerBound);
+Map.Entry<Cut<K>, RangeMapEntry<K, V>> mapEntryBelowToTruncate 
+    = entriesByLowerBound.lowerEntry(rangeToRemove.lowerBound);
 // 如果低点有重叠则进行截取
 if (mapEntryBelowToTruncate != null) {
   RangeMapEntry<K, V> rangeMapEntry = mapEntryBelowToTruncate.getValue();
   if (rangeMapEntry.getUpperBound().compareTo(rangeToRemove.lowerBound) > 0) {
     if (rangeMapEntry.getUpperBound().compareTo(rangeToRemove.upperBound) > 0) {
-			// 新插入的节点被完全包含了
-          putRangeMapEntry(
-			// CASE: 
-			// 1. PUT [3，10] A
-			// 2. PUT [5, 7] B 
-			// 再走一步会 [3，10] A + [5,7] B -> (7,10] A
-			// 再加上之后的拆分 => [3,5) A | [5,7] B | (7,10] A
-          rangeToRemove.upperBound, // 新插入节点的最大值
-          rangeMapEntry.getUpperBound(), // 包含新节点的老节点的最大值
-          mapEntryBelowToTruncate.getValue().getValue()); // 老节点的value
+        // 新插入的节点被完全包含了
+        putRangeMapEntry(
+        // CASE: 
+        // 1. PUT [3，10] A
+        // 2. PUT [5, 7] B 
+        // 再走一步会 [3，10] A + [5,7] B -> (7,10] A
+        // 再加上之后的拆分 => [3,5) A | [5,7] B | (7,10] A
+        rangeToRemove.upperBound, // 新插入节点的最大值
+        rangeMapEntry.getUpperBound(), // 包含新节点的老节点的最大值
+        mapEntryBelowToTruncate.getValue().getValue()); // 老节点的value
     }
     // 有交集存在
     putRangeMapEntry(
@@ -157,7 +164,7 @@ public V get(K key) {
 }
 
 public Entry<Range<K>, V> getEntry(K key) {
-	// 使用TreeMap的floorEntry方法查找对应的Key
+  // 使用TreeMap的floorEntry方法查找对应的Key
   Map.Entry<Cut<K>, RangeMapEntry<K, V>> mapEntry =
       entriesByLowerBound.floorEntry(Cut.belowValue(key));
   if (mapEntry != null && mapEntry.getValue().contains(key)) {
