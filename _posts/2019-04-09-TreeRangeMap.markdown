@@ -16,23 +16,22 @@ tags:
 ## base
 `Range` guava提供的一个用于区间操作的类，提供了以下几种方法：
 
-```java
-open(C, C) 		// (a..b)
-closed(C, C) 		// [a..b]
-closedOpen(C, C) 	// [a..b)
-openClosed(C, C) 	// (a..b]
-greaterThan(C) 	// (a..+∞)
-atLeast(C) 		// [a..+∞)
-lessThan(C) 		// (-∞..b)
-atMost(C) 		// (-∞..b]
-all() 			// (-∞..+∞)
-
-contains(C value) 		// 包含
-encloses(Range range)		// range是否包含
-isConnected(Range range)	// range是否可连接上
-span(Range range) 		//获取两个range的并集，如果两个range是两连的，则是其最小range
-intersection(Range range)	//如果两个range相连时，返回最大交集，如果不相连时，直接抛出异常
-```
+方法 | 含义
+:--- | :---:
+open(C, C) 	|  (a..b)
+closed(C, C) 	|  [a..b]
+closedOpen(C, C) |  [a..b)
+openClosed(C, C) |  (a..b]
+greaterThan(C) |  (a..+∞)
+atLeast(C) 	|  [a..+∞)
+lessThan(C) 	|  (-∞..b)
+atMost(C) 	|  (-∞..b]
+all() 		|  (-∞..+∞)
+contains(C value) 	|  包含
+encloses(Range range)	|  range是否包含
+isConnected(Range range)|  range是否可连接上
+span(Range range) 	| 获取两个range的并集，如果两个range是两连的，则是其最小range
+intersection(Range range)| 如果两个range相连时，返回最大交集，如果不相连时，直接抛出异常
 
 ## Case
 在一个需求中，我希望通过一个时间查到该时间范围对应的Value，进而希望使用Range。尝试写了一个`map<Range<DateTime>, String>` 主要需要实现`get()`方法。
@@ -69,6 +68,7 @@ HashMap<Range<DateTime>, String> range, DateTime dateTime) {
 //初始化存储结构
 private final NavigableMap<Cut<K>, RangeMapEntry<K, V>> entriesByLowerBound; 
 ```
+Cut<K> 是一个抽象类用于表示开闭区间的最小和最大值(比如(1,2]就是一个左开右闭区间), 具体使用4个继承Cut的内部类 `BelowValue`，`AboveValue`，`BelowAll`，`AboveAll` 来表示
 
 ```java
 public static <K extends Comparable, V> TreeRangeMap<K, V> create() {
@@ -76,11 +76,15 @@ public static <K extends Comparable, V> TreeRangeMap<K, V> create() {
   return new TreeRangeMap<K, V>(); 
 }
 
+Guava很喜欢使用方法来进行对象的创建,比如Lists,GuavaCache等等
+
 private TreeRangeMap() {
   // 可以看到就是创建了一个 TreeMap
   this.entriesByLowerBound = Maps.newTreeMap(); 
 }
 ```
+
+其实对于RangeMap不只有TreeMap的实现,还有ImmutableRangeMap的实现方式,这里只涉及TreeMap
 
 ```java
 private static final class RangeMapEntry<K extends Comparable, V> 
@@ -104,7 +108,6 @@ private static final class RangeMapEntry<K extends Comparable, V>
 ```
 
 
-
 ### put
 ```java
 public void put(Range<K> range, V value) {
@@ -117,6 +120,7 @@ public void put(Range<K> range, V value) {
   }
 }
 ```
+前提到了不能存在交集, 如果有交集就需要使用下面的remove方法进行去重.
 
 ### remove
 ```java
@@ -148,13 +152,15 @@ if (mapEntryBelowToTruncate != null) {
 }
 ```
 
+这里是左端交集的情况,另一端完全一样就不赘述了. 
+
 ```java
-// 在Remove方法中用到的方法 就是put了一个新的Entry
 private void putRangeMapEntry(Cut<K> lowerBound, Cut<K> upperBound, V value) {
   entriesByLowerBound.put(lowerBound, new RangeMapEntry<K, V>(lowerBound, upperBound, value));
 }
 ```
 
+ 在Remove方法中用到的方法 就是put了一个新的Entry
 
 ### get
 ```java
