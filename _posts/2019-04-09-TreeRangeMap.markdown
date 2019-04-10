@@ -16,6 +16,7 @@ tags:
 ## base
 `Range` guava提供的一个用于区间操作的类，提供了以下几种方法：
 
+
 方法 | 含义
 :--- | :---:
 open(C, C) 	|  (a..b)
@@ -29,7 +30,7 @@ atMost(C) 	|  (-∞..b]
 all() 		|  (-∞..+∞)
 contains(C value) 	|  包含
 encloses(Range range)	|  range是否包含
-isConnected(Range range)|  range是否可连接上
+isConnected |  range是否可连接上
 span(Range range) 	| 获取两个range的并集，如果两个range是两连的，则是其最小range
 intersection(Range range)| 如果两个range相连时，返回最大交集，如果不相连时，直接抛出异常
 
@@ -75,9 +76,11 @@ public static <K extends Comparable, V> TreeRangeMap<K, V> create() {
   // 使用Guava常用的模式，通过方法来创建对象
   return new TreeRangeMap<K, V>(); 
 }
+```
 
 Guava很喜欢使用方法来进行对象的创建,比如Lists,GuavaCache等等
 
+```java
 private TreeRangeMap() {
   // 可以看到就是创建了一个 TreeMap
   this.entriesByLowerBound = Maps.newTreeMap(); 
