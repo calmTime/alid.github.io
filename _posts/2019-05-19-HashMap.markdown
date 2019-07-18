@@ -17,7 +17,8 @@ tags:
 基础的Map有一下2种
 1. HashMap
 2. HashTable
-当然还有并发包加入的`ConcurrentHashMap`, 因为不属于基础的HashMap就先不说了
+
+> 当然还有并发包加入的`ConcurrentHashMap`, 因为不属于基础的HashMap就先不说了
 
 最简单的区别就是HashTable是线程安全的,这里主要聊一下HashMap中的一些知识点.
 1. hash算法
@@ -27,6 +28,7 @@ tags:
 
 ## HashMap概念
 > 一些不太清晰的小点总结
+
 1. null可以作为键，这样的键只有一个；可以有一个或多个键所对应的值为null
 2. HashMap的hash值是重新计算的,而不是直接使用对象的hashCode。
 3. 默认长度是16. 但是，如果用户通过构造函数指定了一个数字作为容量，那么Hash会选择大于该数字的第一个2的幂作为容量。(3->4、7->8、9->16)
@@ -34,6 +36,7 @@ tags:
 
 ## hash算法
 >参考:[H神博客](http://www.hollischuang.com/archives/2091)
+
 #### 常见Hash函数:
 
 * 直接定址法：直接以关键字k或者k加上某个常数（k+c）作为哈希地址。
@@ -514,6 +517,7 @@ public void remove(RBNode<T> node) {
 1. 待删除的节点的兄弟节点是黑色的节点，且兄弟节点的子节点都是黑色的。
 1. 待调整的节点的兄弟节点是黑色的节点，且兄弟节点的左子节点是红色的，右节点是黑色的(兄弟节点在右边)，如果兄弟节点在左边的话，就是兄弟节点的右子节点是红色的，左节点是黑色的。
 1. 待调整的节点的兄弟节点是黑色的节点，且右子节点是是红色的(兄弟节点在右边)，如果兄弟节点在左边，则就是对应的就是左节点是红色的。
+
 #### 删除操作-case 1
 
 由于兄弟节点是红色节点的时候，无法借调黑节点，所以需要将兄弟节点提升到父节点，由于兄弟节点是红色的，根据RBTree的定义，兄弟节点的子节点是黑色的，就可以从它的子节点借调了。
@@ -823,14 +827,18 @@ final TreeNode<K,V> putTreeVal(HashMap<K,V> map, Node<K,V>[] tab,
 **问题都出现在红框代码上** 如果其中一个线程正好到这一步的时候被挂起.就会出现问题.假设A正常执行B被挂起.
 
 >B被挂起时的状态
+>
 e -> Entry3
+>
 next -> Entry2
 
 **2. A执行完成**
 ![图2](https://upload-images.jianshu.io/upload_images/13369457-2b9348c069cd849c.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 >B的状态还是:
+>
 >e     -> Entry3
+>
 >next -> Entry2
 
 **3. B还是正常执行**
@@ -838,7 +846,9 @@ next -> Entry2
 
 **到这里开始看上去很正常** 因为开始时B的状态还是正常的(被挂起时确定的)
 >然而现在B的状态不对了
+>
 >e     -> Entry2
+>
 >next -> Entry3
 
 和之前对比 **发现e和next完全反了** 原因是A扩容后在原位的节点反向了
@@ -846,7 +856,9 @@ next -> Entry2
 ![图4](https://upload-images.jianshu.io/upload_images/13369457-78f5a7b3beb7e66a.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 >图4,B的状态
+>
 >e     -> Entry3
+>
 >next -> Entry3.next = null
 
 这时B下一个将要操作的节点又变成了Entry3, 也就是 **Entry2.next = Entry3** 那样必然就形参了循环
