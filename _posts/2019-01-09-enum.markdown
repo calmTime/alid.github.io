@@ -1,7 +1,7 @@
 ---
 layout:     post
 title:      "枚举"
-subtitle:   " \"我们能用枚举做什么\""
+subtitle:   "我们能用枚举做什么"
 date:       2019-01-09 12:00:00
 author:     "ALID"
 header-img: "img/post-bg-2015.jpg"

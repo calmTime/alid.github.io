@@ -1,0 +1,879 @@
+---
+layout:     post
+title:      "HashMap"
+subtitle:   "重学Java-数据结构"
+date:       2019-05-19 12:00:00
+author:     "ALID"
+header-img: "img/post-bg-js-module.jpg"
+catalog: true
+tags:
+    - HashMap
+    - java
+    - 重学Java
+---
+
+## Map基础
+
+基础的Map有一下2种
+1. HashMap
+2. HashTable
+当然还有并发包加入的`ConcurrentHashMap`, 因为不属于基础的HashMap就先不说了
+
+最简单的区别就是HashTable是线程安全的,这里主要聊一下HashMap中的一些知识点.
+1. hash算法
+2. 红黑树的使用
+3. hashcode() & equals()
+4. 成环
+
+## HashMap概念
+> 一些不太清晰的小点总结
+1. null可以作为键，这样的键只有一个；可以有一个或多个键所对应的值为null
+2. HashMap的hash值是重新计算的,而不是直接使用对象的hashCode。
+3. 默认长度是16. 但是，如果用户通过构造函数指定了一个数字作为容量，那么Hash会选择大于该数字的第一个2的幂作为容量。(3->4、7->8、9->16)
+4. 在jdk1.8之前是链表插入头部元素，在jdk1.8中是插入尾部元素。
+
+## hash算法
+>参考:[H神博客](http://www.hollischuang.com/archives/2091)
+#### 常见Hash函数:
+
+* 直接定址法：直接以关键字k或者k加上某个常数（k+c）作为哈希地址。
+
+* 数字分析法：提取关键字中取值比较均匀的数字作为哈希地址。
+
+* 除留余数法：用关键字k除以某个不大于哈希表长度m的数p，将所得余数作为哈希表地址。
+
+* 分段叠加法：按照哈希表地址位数将关键字分成位数相等的几部分，其中最后一部分可以比较短。然后将这几部分相加，舍弃最高进位后的结果就是该关键字的哈希地址。
+
+* 平方取中法：如果关键字各个部分分布都不均匀的话，可以先求出它的平方值，然后按照需求取中间的几位作为哈希地址。
+
+* 伪随机数法：采用一个伪随机数当作哈希函数。
+
+#### 遇到碰撞:
+* 开放定址法：
+    开放定址法就是一旦发生了冲突，就去寻找下一个空的散列地址，只要散列表足够大，空的散列地址总能找到，并将记录存入。
+* 链地址法
+    将哈希表的每个单元作为链表的头结点，所有哈希地址为i的元素构成一个同义词链表。即发生冲突时就把该关键字链在以该单元为头结点的链表的尾部。
+* 再哈希法
+    当哈希地址发生冲突用其他的函数计算另一个哈希函数地址，直到冲突不再产生为止。
+* 建立公共溢出区
+    将哈希表分为基本表和溢出表两部分，发生冲突的元素都放入溢出表中。
+
+#### HashMap的实现
+
+>主要有两个方法:
+>
+>hash ：该方法主要是将Object转换成一个整型。
+>indexFor ：该方法主要是将hash生成的整型转换成链表数组中的下标。
+
+先看一下Java7:
+```java
+final int hash(Object k) {
+    int h = hashSeed;
+    if (0 != h && k instanceof String) {
+        return sun.misc.Hashing.stringHash32((String) k);
+    }
+
+    h ^= k.hashCode();
+    h ^= (h >>> 20) ^ (h >>> 12);
+    return h ^ (h >>> 7) ^ (h >>> 4);
+}
+
+static int indexFor(int h, int length) {
+    return h & (length-1); //位于运算代替去模
+}
+```
+##### 位与运算
+核心就是一点使用位于运算代替去模,因为位于运算是直接基于2进制的,在内存上直接计算,速度非常快.
+![位与运算](https://upload-images.jianshu.io/upload_images/13369457-06f3596e9f37c07c.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+return h & (length-1);只要保证length的长度是2^n的话，就可以实现取模运算了。而HashMap中的length也确实是2的倍数，初始值是16，之后每次扩充为原来的2倍。
+
+##### 减少冲突
+```java
+h ^= k.hashCode();
+h ^= (h >>> 20) ^ (h >>> 12);
+return h ^ (h >>> 7) ^ (h >>> 4);
+```
+对key的hashCode进行扰动计算，防止不同hashCode的高位不同但低位相同导致的hash冲突。简单点说，就是为了把高位的特征和低位的特征组合起来，降低哈希冲突的概率，也就是说，尽量做到任何一位的变化都能对最终得到的结果产生影响。
+
+举个例子来说，我们现在想向一个HashMap中put一个K-V对，Key的值为“hollischuang”，经过简单的获取hashcode后，得到的值为“1011000110101110011111010011011”，如果当前HashTable的大小为16，即在不进行扰动计算的情况下，他最终得到的index结果值为11。由于15的二进制扩展到32位
+
+>其实，使用位运算代替取模运算，除了性能之外，还有一个好处就是可以很好的**解决负数的问题**。因为我们知道，hashcode的结果是int类型，而int的取值范围是-2^31 ~ 2^31 – 1，即[ -2147483648, 2147483647]；这里面是包含负数的，我们知道，对于一个负数取模还是有些麻烦的。如果使用二进制的位运算的话就可以很好的避免这个问题。首先，不管hashcode的值是正数还是负数。length-1这个值一定是个正数。那么，他的二进制的第一位一定是0（有符号数用最高位作为符号位，“0”代表“+”，“1”代表“-”），这样里两个数做按位与运算之后，第一位一定是个0，也就是，得到的结果一定是个正数。
+
+##### Java8实现
+
+关于Java 8中的hash函数，原理和Java 7中基本类似。Java 8中这一步做了优化，只做一次16位右位移异或混合，而不是四次，但原理是不变的。
+```java
+static final int hash(Object key) {
+    int h;
+    return (key == null) ? 0 : (h = key.hashCode()) ^ (h >>> 16);
+}
+```
+在JDK1.8的实现中，优化了高位运算的算法，通过hashCode()的高16位异或低16位实现的：(h = k.hashCode()) ^ (h >>> 16)，主要是从速度、功效、质量来考虑的。以上方法得到的int的hash值，然后再通过h & (table.length -1)来得到该对象在数据中保存的位置。
+
+
+
+## 红黑树
+>参考:[漫画:什么是红黑树](https://zhuanlan.zhihu.com/p/31805309)以及[红-黑树（看完包懂~）](https://blog.csdn.net/eson_15/article/details/51144079)
+
+Java8后 链表长度大于8就会转换成红黑树, 红黑树主要就是为了保证树的平衡,插入和删除操作时会维持树的平衡，即保证树的**高度在[logN,logN+1]**（极端的情况下可以出现RBTree的高度达到2*logN，但实际上很难遇到）, 进而使查询时间复杂度始终保持在O(logN), RBTree的删除和插入操作的时间复杂度也是O(logN).
+1. 任何一个节点都有颜色，黑色或者红色；
+1. 根节点是黑色的；
+1. 父子节点之间不能出现两个连续的红节点；
+1. 任何一个节点向下遍历到其子孙的叶子节点，所经过的黑节点个数必须相等；
+1. 空节点被认为是黑色的。
+
+**Java8中简单是数据结构如下:**
+```java
+static final class TreeNode<K,V> extends LinkedHashMap.Entry<K,V> {
+        TreeNode<K,V> parent;  // 父节点
+        TreeNode<K,V> left;
+        TreeNode<K,V> right;
+        TreeNode<K,V> prev;    // needed to unlink next upon deletion
+        boolean red; //红黑标志
+}
+```
+并且红黑树的节点也继承了Map节点的属性
+```java
+        final int hash;
+        final K key;
+        V value;
+        Node<K,V> next;
+```
+
+##### 调整方法
+
+**1 变色:**
+
+为了重新符合红黑树的规则，尝试把红色节点变为黑色，或者把黑色节点变为红色。
+
+![当D加入时触发了变色](https://upload-images.jianshu.io/upload_images/13369457-1a289b9d50f0d536.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+**再来详细说明一下变色过程:**
+
+下图所表示的是红黑树的一部分，需要注意节点25并非根节点。因为节点21和节点22连续出现了红色，不符合规则4，所以把节点22从红色变成黑色：
+![](https://upload-images.jianshu.io/upload_images/13369457-325566b343be027d.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+但这样并不算完，因为凭空多出的黑色节点打破了规则5，所以发生连锁反应，需要继续把节点25从黑色变成红色：
+![](https://upload-images.jianshu.io/upload_images/13369457-575ee1390593a285.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+此时仍然没有结束，因为节点25和节点27又形成了两个连续的红色节点，需要继续把节点27从红色变成黑色：
+![](https://upload-images.jianshu.io/upload_images/13369457-ae26f32cab00c59e.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+这样就保证了平衡,除了变色以外还有旋转的方法保证平衡
+
+**2 左旋:**
+
+![左旋](https://upload-images.jianshu.io/upload_images/13369457-d31f5f888b72a76a.gif?imageMogr2/auto-orient/strip)
+
+hashMap中的左旋:
+
+```java
+/*
+ * 左旋示意图：对节点p进行左旋
+ *     pp                      pp
+ *    /                       /
+ *   p                       r
+ *  / \                     / \
+ * pl  r      ----->       p   ry
+ *    / \                / \
+ *   rl ry              pl  rl
+ */
+static <K,V> TreeNode<K,V> rotateLeft(TreeNode<K,V> root, TreeNode<K,V> p) {
+    TreeNode<K,V> r, pp, rl;
+    // 0. r赋值
+    if (p != null && (r = p.right) != null) {
+        //1. rl->p
+        if ((rl = p.right = r.left) != null)
+            rl.parent = p;
+        //2. pp赋值
+        if ((pp = r.parent = p.parent) == null)
+            (root = r).red = false;  //如果p就是root,则将r赋值为root(黑)
+        //3. r->pp
+        else if (pp.left == p)
+            pp.left = r;
+        else
+            pp.right = r;
+        //4. p->r
+        r.left = p;
+        p.parent = r;
+    }
+    return root;
+}
+```
+>p.s.小细节 java连等是从后向前赋值
+
+**3 右旋:**
+
+![右旋](https://upload-images.jianshu.io/upload_images/13369457-aec06c63d9a2e7c0.gif?imageMogr2/auto-orient/strip)
+
+也是类似的HashMap中的右旋源码:
+```java
+/*
+ * 左旋示意图：对节点p进行右旋
+ *       pp                  pp
+ *       /                   /
+ *      p                   l
+ *     / \                 / \
+ *    l  pr   ----->      ll  p
+ *   / \                     / \
+ * ll  lr                   lr pr
+ */
+static <K,V> TreeNode<K,V> rotateRight(TreeNode<K,V> root, TreeNode<K,V> p) {
+    TreeNode<K,V> l, pp, lr;
+    if (p != null && (l = p.left) != null) {
+        if ((lr = p.left = l.right) != null)
+            lr.parent = p;
+        if ((pp = l.parent = p.parent) == null)
+            (root = l).red = false;
+        else if (pp.right == p)
+            pp.right = l;
+        else
+            pp.left = l;
+        l.right = p;
+        p.parent = l;
+    }
+    return root;
+}	
+}
+```
+
+**动态图看眼花了 可以看一下静态图:**
+![](https://upload-images.jianshu.io/upload_images/13369457-bd5d85f003d6ee14.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+>当我们知道了如何保持平衡就又产生了一个疑问, 该使用哪种方式保证平衡?
+>这个的确比较复杂,**一般是通过不同的case进行选择.**下面会结合JDK源码进行说明.
+
+##### 插入
+新插入的节点是红色的，插入修复操作如果遇到父节点的颜色为黑则修复操作结束。也就是说，只有在**父节点为红色节点的时候是需要插入修复操作。**
+
+>我们现在就想要将插入时调整平衡的操作总结成通用操作
+
+如果是第一次插入，由于原树为空，所以只会违反红-黑树的规则2，所以只要把根节点涂黑即可；如果插入节点的父节点是黑色的，那不会违背红-黑树的规则，什么也不需要做；但是遇到如下三种情况时，我们就要开始变色和旋转了：
+>1. 插入节点的父节点和其叔叔节点（祖父节点的另一个子节点）均为红色的；
+>2. 插入节点的父节点是红色，叔叔节点是黑色，且插入节点是其父节点的右子节点；
+>3. 插入节点的父节点是红色，叔叔节点是黑色，且插入节点是其父节点的左子节点。
+
+下面我们先挨个分析这三种情况都需要如何操作，然后再给出实现代码。
+
+**对于情况1：**插入节点的父节点和其叔叔节点（祖父节点的另一个子节点）均为红色的。此时，肯定存在祖父节点，但是不知道父节点是其左子节点还是右子节点，但是由于对称性，我们只要讨论出一边的情况，另一种情况自然也与之对应。这里考虑父节点是祖父节点的左子节点的情况，如下左图所示：
+
+![](http://upload-images.jianshu.io/upload_images/13369457-007c3647d1c5ffe5.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+对于这种情况，我们要做的操作有：将当前节点(4)的父节点(5)和叔叔节点(8)涂黑，将祖父节点(7)涂红，变成上右图所示的情况。再将当前节点指向其祖父节点，再次从新的当前节点开始算法（具体等下看下面的程序）。这样上右图就变成了情况2了。
+
+**对于情况2：**插入节点的父节点是红色，叔叔节点是黑色，且插入节点是其父节点的右子节点。我们要做的操作有：将当前节点(7)的父节点(2)作为新的节点，以新的当前节点为支点做左旋操作。完成后如左下图所示，这样左下图就变成情况3了。
+
+![](http://upload-images.jianshu.io/upload_images/13369457-2fb696f2c04a5722.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+**对于情况3：**插入节点的父节点是红色，叔叔节点是黑色，且插入节点是其父节点的左子节点。我们要做的操作有：将当前节点的父节点(7)涂黑，将祖父节点(11)涂红，在祖父节点为支点做右旋操作。最后把根节点涂黑，整个红-黑树重新恢复了平衡，如右上图所示。至此，插入操作完成！
+
+我们可以看出，如果是从情况1开始发生的，必然会走完情况2和3，也就是说这是一整个流程，当然咯，实际中可能不一定会从情况1发生，如果从情况2开始发生，那再走个情况3即可完成调整，如果直接只要调整情况3，那么前两种情况均不需要调整了。故变色和旋转之间的先后关系可以表示为：变色->左旋->右旋。
+
+至此，我们完成了全部的插入操作。下面来看一下简单的代码实现（可以结合上面的分析图，更加利与理解）：
+```java
+/*********************** 向红黑树中插入节点 **********************/
+public void insert(T key) {
+    RBNode<T> node = new RBNode<>(key, BLACK, null, null, null);
+    insert(node);
+}
+
+/**
+ * 1、将节点插入到红黑树中，这个过程与二叉搜索树是一样的
+ * 2、将插入的节点着色为"红色"；将插入的节点着色为红色，不会违背"特性5"！
+ *    少违背了一条特性，意味着我们需要处理的情况越少。
+ * 3、通过一系列的旋转或者着色等操作，使之重新成为一颗红黑树。
+ * @param node 插入的节点
+ */
+public void insert(RBNode<T> node) {
+    //node的父节点
+    RBNode<T> current = null;
+    RBNode<T> x = mRoot;
+
+    while (x != null) {
+        current = x;
+        int cmp = node.key.compareTo(x.key);
+        if (cmp < 0) {
+            x = x.left;
+        } else {
+            x = x.right;
+        }
+    }
+    //找到位置，将当前current作为node的父节点
+    node.parent = current;
+    //2. 接下来判断node是插在左子节点还是右子节点
+    if (current != null) {
+        int cmp = node.key.compareTo(current.key);
+        if (cmp < 0) {
+            current.left = node;
+        } else {
+            current.right = node;
+        }
+        node.color = RED;
+        insertFixUp(node);
+    } else {
+        this.mRoot = node;
+    }
+}
+
+/**
+ * 修改整插入node节点之后的红黑树
+ * @param node
+ */
+public void insertFixUp(RBNode<T> node) {
+    //定义父节点和祖父节点
+    RBNode<T> parent, gparent;
+    //需要修整的条件：父节点存在，且父节点的颜色是红色
+    while (((parent = node.parent) != null) && isRed(parent)) {
+        //祖父节点
+        gparent = parent.parent;
+        //若父节点是祖父节点的左子节点
+        if (parent == gparent.left) {
+            //获取叔叔点点
+            RBNode<T> uncle = gparent.right;
+            //case1:叔叔节点是红色
+            if (uncle != null && isRed(uncle)) {
+                //把父亲和叔叔节点涂黑色
+                parent.color = BLACK;
+                uncle.color = BLACK;
+                //把祖父节点图红色
+                gparent.color = RED;
+                //将位置放到祖父节点
+                node = gparent;
+                //继续往上循环判断
+                continue;
+            }
+
+            //case2：叔叔节点是黑色，且当前节点是右子节点
+            if (node == parent.right) {
+                //从父亲即诶单处左旋
+                leftRotate(parent);
+                //将父节点和自己调换一下，为右旋左准备
+                RBNode<T> tmp = parent;
+                parent = node;
+                node = tmp;
+            }
+            //case3：叔叔节点是黑色，且当前节点是左子节点
+            parent.color = BLACK;
+            gparent.color = RED;
+            rightRotate(gparent);
+        } else {
+            //若父亲节点是祖父节点的右子节点，与上面的完全相反，本质一样的
+            RBNode<T> uncle = gparent.left;
+            //case1:叔叔节点也是红色
+            if (uncle != null & isRed(uncle)) {
+                parent.color = BLACK;
+                uncle.color = BLACK;
+                gparent.color = RED;
+                node = gparent;
+                continue;
+            }
+
+            //case2: 叔叔节点是黑色的，且当前节点是左子节点
+            if (node == parent.left) {
+                rightRotate(parent);
+                RBNode<T> tmp = parent;
+                parent = node;
+                node = tmp;
+            }
+            //case3: 叔叔节点是黑色的，且当前节点是右子节点
+            parent.color = BLACK;
+            gparent.color = RED;
+            leftRotate(gparent);
+        }
+    }
+    //将根节点设置为黑色
+    this.mRoot.color = BLACK;
+}
+```
+
+
+#### 删除
+
+删除保证平衡的方法也是通过和插入相同的方法保证平衡.
+
+红黑树的删除操作是最复杂的操作，复杂的地方就在于当删除了黑色节点的时候，如何从兄弟节点去借调黑节点，以保证树的颜色符合定义。由于红色的兄弟节点是没法借调出黑节点的，这样只能通过旋转操作让他上升到父节点，而由于它是红节点，所以它的子节点就是黑的，可以借调。
+
+还是通过总结成``case``的方式来处理:
+> 如果需要删除的节点颜色为红色，那么红黑树的结构不被破坏，也就不需要进行调整。如果我们判断删除节点的颜色为黑色，那么就进行调整；
+1. 如果删除节点的左孩子和右孩子不同时为null，那么只需要让其子树继承删除该节点的位置；
+2. 如果删除的节点是叶子节点，我们直接进行调整；
+>假如删除节点的左右孩子都不是null，需要``后继节点``替换被删除的节点和值和颜色，这样才不会引起红黑树平衡的破坏，只需要对``后继节点``删除后进行调整，这样我们就回归处理情况 1 和 2 的状态；
+    - 后继节点为左子树最右边的子叶节点；
+    - 后继节点为右子树最左边的叶子节点；
+
+删除情况比较复杂 我们先看删除的**代码:**
+```java
+/*********************** 删除红黑树中的节点 **********************/
+public void remove(T key) {
+    RBNode<T> node;
+    if ((node = search(mRoot, key)) != null) {
+        remove(node);
+    }
+}
+
+/**
+ * 1、被删除的节点没有儿子，即删除的是叶子节点。那么，直接删除该节点。
+ * 2、被删除的节点只有一个儿子。那么直接删除该节点，并用该节点的唯一子节点顶替它的初始位置。
+ * 3、被删除的节点有两个儿子。那么先找出它的后继节点（右孩子中的最小的，该孩子没有子节点或者只有一右孩子）。
+ *    然后把"它的后继节点的内容"复制给"该节点的内容"；之后，删除"它的后继节点"。
+ *    在这里后继节点相当与替身，在将后继节点的内容复制给"被删除节点"之后，再将后继节点删除。
+ *    ------这样问题就转化为怎么删除后继即节点的问题？
+ *    在"被删除节点"有两个非空子节点的情况下，它的后继节点不可能是双子都非空。
+ *    注：后继节点为补充被删除的节点；
+ *    即：意味着"要么没有儿子，要么只有一个儿子"。
+ *    若没有儿子，则回归到（1）。
+ *    若只有一个儿子，则回归到（2）。
+ *
+ * @param node  需要删除的节点
+ */
+public void remove(RBNode<T> node) {
+    RBNode<T> child, parent;
+    boolean color;
+    //1、删除的节点的左右孩子都不为空
+    if ((node.left != null) && (node.right != null)) {
+        //先找到被删除节点的后继节点，用它来取代被删除节点的位置
+        RBNode<T> replace = node;
+        //1).获取后继节点[右孩子中的最小]
+        replace = replace.right;
+        while (replace.left != null) {
+            replace = replace.left;
+        }
+        //2).处理【后继节点的子节点】和【被删除节点的子节点】之间的关系
+        if (node.parent != null) {
+            //要删除的节点不是根节点
+            if (node == node.parent.left) {
+                node.parent.left = replace;
+            } else {
+                node.parent.right = replace;
+            }
+        } else {
+            mRoot = replace;
+        }
+
+        //3).处理【后继节点的子节点】和【被删除节点的子节点】之间的关系
+        //后继节点肯定不存在左子节点
+        child = replace.right;
+        parent = replace.parent;
+        //保存后继节点的颜色
+        color = replace.color;
+        //后继节点是被删除的节点
+        if (parent == node) {
+            parent =replace;
+        } else {
+            if (child != null) {
+                child.parent = parent;
+            }
+            parent.left = child;
+            replace.right = node.right;
+            node.right.parent = replace;
+        }
+        replace.parent = node.parent;
+        replace.color = node.color;
+        replace.left = node.left;
+        node.left.parent = replace;
+        //4。如果移走的后继节点颜色是黑色，重新修正红黑树
+        if (color == BLACK) {
+            removeFixUp(child, parent);
+        }
+        node = null;
+    } else {
+        //被删除的节点是叶子节点，或者只有一个孩子。
+        if (node.left != null) {
+            child = node.left;
+        } else {
+            child = node.right;
+        }
+        parent = node.parent;
+        //保存"取代节点"的颜色
+        color = node.color;
+        if (child != null) {
+            child.parent = parent;
+        }
+        //"node节点"不是根节点
+        if (parent != null) {
+            if (parent.left == node) {
+                parent.left = child;
+            } else {
+                parent.right = child;
+            }
+        } else {
+            mRoot = child;
+        }
+        if (color == BLACK) {
+            removeFixUp(child, parent);
+        }
+        node = null;
+    }
+}
+```
+#### 删除之节点调整
+但是删除之后呢?还需要重新维持平衡保持平衡的方法参数是``后继节点``和``删除的父节点``
+下边我们讨论一下节点的颜色情况：因为当前节点的颜色一定是黑色的，我们只根据兄弟节点的颜色做讨论。
+
+1. 待删除的节点的兄弟节点是红色的节点。
+1. 待删除的节点的兄弟节点是黑色的节点，且兄弟节点的子节点都是黑色的。
+1. 待调整的节点的兄弟节点是黑色的节点，且兄弟节点的左子节点是红色的，右节点是黑色的(兄弟节点在右边)，如果兄弟节点在左边的话，就是兄弟节点的右子节点是红色的，左节点是黑色的。
+1. 待调整的节点的兄弟节点是黑色的节点，且右子节点是是红色的(兄弟节点在右边)，如果兄弟节点在左边，则就是对应的就是左节点是红色的。
+#### 删除操作-case 1
+
+由于兄弟节点是红色节点的时候，无法借调黑节点，所以需要将兄弟节点提升到父节点，由于兄弟节点是红色的，根据RBTree的定义，兄弟节点的子节点是黑色的，就可以从它的子节点借调了。
+
+case 1这样转换之后就会变成后面的case 2，case 3，或者case 4进行处理了。上升操作需要对C做一个左旋操作，如果是镜像结构的树只需要做对应的右旋操作即可。
+
+之所以要做case 1操作是因为兄弟节点是红色的，无法借到一个黑节点来填补删除的黑节点。
+
+![](http://upload-images.jianshu.io/upload_images/13369457-08fe2d6e2572d24b.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+
+
+#### 删除操作-case 2
+
+case 2的删除操作是由于兄弟节点可以消除一个黑色节点，因为兄弟节点和兄弟节点的子节点都是黑色的，所以可以将兄弟节点变红，这样就可以保证树的局部的颜色符合定义了。这个时候需要将父节点A变成新的节点，继续向上调整，直到整颗树的颜色符合RBTree的定义为止。
+
+case 2这种情况下之所以要将兄弟节点变红，是因为如果把兄弟节点借调过来，会导致兄弟的结构不符合RBTree的定义，这样的情况下只能是将兄弟节点也变成红色来达到颜色的平衡。当将兄弟节点也变红之后，达到了局部的平衡了，但是对于祖父节点来说是不符合定义4的。这样就需要回溯到父节点，接着进行修复操作。
+
+![](http://upload-images.jianshu.io/upload_images/13369457-1af63f5c64e521fe.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+
+#### 删除操作-case 3
+
+case 3的删除操作是一个中间步骤，它的目的是将左边的红色节点借调过来，这样就可以转换成case 4状态了，在case 4状态下可以将D，E节点都阶段过来，通过将两个节点变成黑色来保证红黑树的整体平衡。
+
+之所以说case-3是一个中间状态，是因为根据红黑树的定义来说，下图并不是平衡的，他是通过case 2操作完后向上回溯出现的状态。之所以会出现case 3和后面的case 4的情况，是因为可以通过借用侄子节点的红色，变成黑色来符合红黑树定义4.
+
+![](http://upload-images.jianshu.io/upload_images/13369457-a0ca79739bb3aa01.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+
+#### 删除操作-case 4
+
+Case 4的操作是真正的节点借调操作，通过将兄弟节点以及兄弟节点的右节点借调过来，并将兄弟节点的右子节点变成红色来达到借调两个黑节点的目的，这样的话，整棵树还是符合RBTree的定义的。
+
+Case 4这种情况的发生只有在待删除的节点的兄弟节点为黑，且子节点不全部为黑，才有可能借调到两个节点来做黑节点使用，从而保持整棵树都符合红黑树的定义。
+
+![](http://upload-images.jianshu.io/upload_images/13369457-3c78baf9ff55163b.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+
+#### 删除操作的总结
+
+红黑树的删除操作是最复杂的操作，复杂的地方就在于当删除了黑色节点的时候，如何从兄弟节点去借调节点，以保证树的颜色符合定义。由于红色的兄弟节点是没法借调出黑节点的，这样只能通过选择操作让他上升到父节点，而由于它是红节点，所以它的子节点就是黑的，可以借调。
+
+对于兄弟节点是黑色节点的可以分成3种情况来处理，当所以的兄弟节点的子节点都是黑色节点时，可以直接将兄弟节点变红，这样局部的红黑树颜色是符合定义的。但是整颗树不一定是符合红黑树定义的，需要往上追溯继续调整。
+
+对于兄弟节点的子节点为左红右黑或者 (全部为红，右红左黑)这两种情况，可以先将前面的情况通过选择转换为后一种情况，在后一种情况下，因为兄弟节点为黑，兄弟节点的右节点为红，可以借调出两个节点出来做黑节点，这样就可以保证删除了黑节点，整棵树还是符合红黑树的定义的，因为黑色节点的个数没有改变。
+
+红黑树的删除操作是遇到删除的节点为红色，或者追溯调整到了root节点，这时删除的修复操作完毕。
+
+
+**看一下调整平衡的代码:**
+```java
+/**
+ * 红黑树删除修正函数
+ *
+ * 在从红黑树中删除插入节点之后(红黑树失去平衡)，再调用该函数；
+ * 目的是将它重新塑造成一颗红黑树。
+ * 如果当前待删除节点是红色的，它被删除之后对当前树的特性不会造成任何破坏影响。
+ * 而如果被删除的节点是黑色的，这就需要进行进一步的调整来保证后续的树结构满足要求。
+ * 这里我们只修正删除的节点是黑色的情况：
+ *
+ * 调整思想：
+ * 为了保证删除节点的父节点左右两边黑色节点数一致，需要重点关注父节点没删除的那一边节点是不是黑色。
+ * 如果删除后父亲节点另一边比删除的一边黑色多，就要想办法搞到平衡。
+ * 1、把父亲节点另一边（即删除节点的兄弟树）其中一个节点弄成红色，也少了一个黑色。
+ * 2、或者把另一边多的节点（染成黑色）转过来一个
+ *
+ * 1）、当前节点是黑色的，且兄弟节点是红色的（那么父节点和兄弟节点的子节点肯定是黑色的）；
+ * 2）、当前节点是黑色的，且兄弟节点是黑色的，且兄弟节点的两个子节点均为黑色的；
+ * 3）、当前节点是黑色的，且兄弟节点是黑色的，且兄弟节点的左子节点是红色，右子节点时黑色的；
+ * 4）、当前节点是黑色的，且兄弟节点是黑色的，且兄弟节点的右子节点是红色，左子节点任意颜色。
+ *
+ * 以上四种情况中，2，3，4都是（当前节点是黑色的，且兄弟节点是黑色的）的子集。
+ *
+ * 参数说明：
+ * @param node 删除之后代替的节点（后序节点）
+ * @param parent 后序节点的父节点
+ */
+private void removeFixUp(RBNode<T> node, RBNode<T> parent) {
+    RBNode<T> other;
+    RBNode<T> root = mRoot;
+    while ((node == null || node.color == BLACK) && node != root) {
+        if (parent.left == node) {
+            other = parent.right;
+            if (other.color == RED) {
+                //case 1：x的兄弟w是红色的【对应状态1，将其转化为2，3，4】
+                other.color = BLACK;
+                parent.color = RED;
+                leftRotate(parent);
+                other = parent.right;
+            }
+
+            if ((other.left == null || other.left.color == BLACK)
+                    && (other.right == null || other.right.color == BLACK)) {
+                //case 2：x的兄弟w是黑色，且w的两个孩子都是黑色的【对应状态2，利用调整思想1网树的根部做递归】
+                other.color = RED;
+                node = parent;
+                parent = node.parent;
+            } else {
+                if (other.right == null || other.right.color == BLACK) {
+                    //case 3:x的兄弟w是黑色的，并且w的左孩子是红色的，右孩子是黑色的【对应状态3，调整到状态4】
+                    other.left.color = BLACK;
+                    other.color = RED;
+                    rightRotate(other);
+                    other = parent.right;
+                }
+                //case 4:x的兄弟w是黑色的；并且w的右孩子是红色的，左孩子任意颜色【对应状态4，利用调整思想2做调整】
+                other.color = parent.color;
+                parent.color = BLACK;
+                other.right.color = BLACK;
+                leftRotate(parent);
+                node = root;
+                break;
+            }
+        } else {
+            other = parent.left;
+            if (other.color == RED) {
+                //case 1:x的兄弟w是红色的
+                other.color = BLACK;
+                parent.color = RED;
+                rightRotate(parent);
+                other = parent.left;
+            }
+
+            if ((other.left == null || other.left.color == BLACK)
+                    && (other.right == null || other.right.color == BLACK)) {
+                //case 2:x兄弟w是黑色，且w的两个孩子也都是黑色的
+                other.color = RED;
+                node = parent;
+                parent = node.parent;
+            } else {
+                if (other.left == null || other.left.color == BLACK) {
+                    //case 3:x的兄弟w是黑色的，并且w的左孩子是红色，右孩子为黑色。
+                    other.right.color = BLACK;
+                    other.color = RED;
+                    leftRotate(other);
+                    other = parent.left;
+                }
+                //case 4:x的兄弟w是黑色的；并且w的右孩子是红色的，左孩子任意颜色。
+                other.color = parent.color;
+                parent.color = BLACK;
+                other.left.color = BLACK;
+                rightRotate(parent);
+                node = root;
+                break;
+            }
+        }
+    }
+    if (node != null) {
+        node.color = BLACK;
+    }
+}
+```
+
+
+#### HashMap 中的其他方法
+treeifyBin方法
+```java
+/**
+ * tab：元素数组，
+ * hash：hash值（要增加的键值对的key的hash值）
+ */
+final void treeifyBin(Node<K,V>[] tab, int hash) {
+ 
+    int n, index; Node<K,V> e;
+    /*
+     * 如果元素数组为空 或者 数组长度小于 树结构化的最小限制
+     * MIN_TREEIFY_CAPACITY 默认值64，对于这个值可以理解为：如果元素数组长度小于这个值，没有必要去进行结构转换
+     * 当一个数组位置上集中了多个键值对，那是因为这些key的hash值和数组长度取模之后结果相同。（并不是因为这些key的hash值相同）
+     * 因为hash值相同的概率不高，所以可以通过扩容的方式，来使得最终这些key的hash值在和新的数组长度取模之后，拆分到多个数组位置上。
+     */
+    if (tab == null || (n = tab.length) < MIN_TREEIFY_CAPACITY)
+        resize(); // 扩容
+ 
+    // 如果元素数组长度已经大于等于了 MIN_TREEIFY_CAPACITY，那么就有必要进行结构转换了
+    // 根据hash值和数组长度进行取模运算后，得到链表的首节点
+    else if ((e = tab[index = (n - 1) & hash]) != null) { 
+        TreeNode<K,V> hd = null, tl = null; // 定义首、尾节点
+        do { 
+            TreeNode<K,V> p = replacementTreeNode(e, null); // 将该节点转换为 树节点
+            if (tl == null) // 如果尾节点为空，说明还没有根节点
+                hd = p; // 首节点（根节点）指向 当前节点
+            else { // 尾节点不为空，以下两行是一个双向链表结构
+                p.prev = tl; // 当前树节点的 前一个节点指向 尾节点
+                tl.next = p; // 尾节点的 后一个节点指向 当前节点
+            }
+            tl = p; // 把当前节点设为尾节点
+        } while ((e = e.next) != null); // 继续遍历链表
+ 
+        // 到目前为止 也只是把Node对象转换成了TreeNode对象，把单向链表转换成了双向链表
+ 
+        // 把转换后的双向链表，替换原来位置上的单向链表
+        if ((tab[index] = hd) != null)
+            hd.treeify(tab);//此处单独解析
+    }
+}
+```
+
+putTreeVal方法
+```java
+/**
+ * 当存在hash碰撞的时候，且元素数量大于8个时候，就会以红黑树的方式将这些元素组织起来
+ * map 当前节点所在的HashMap对象
+ * tab 当前HashMap对象的元素数组
+ * h   指定key的hash值
+ * k   指定key
+ * v   指定key上要写入的值
+ * 返回：指定key所匹配到的节点对象，针对这个对象去修改V（返回空说明创建了一个新节点）
+ */
+final TreeNode<K,V> putTreeVal(HashMap<K,V> map, Node<K,V>[] tab,
+                                int h, K k, V v) {
+    Class<?> kc = null; // 定义k的Class对象
+    boolean searched = false; // 标识是否已经遍历过一次树，未必是从根节点遍历的，但是遍历路径上一定已经包含了后续需要比对的所有节点。
+    TreeNode<K,V> root = (parent != null) ? root() : this; // 父节点不为空那么查找根节点，为空那么自身就是根节点
+    for (TreeNode<K,V> p = root;;) { // 从根节点开始遍历，没有终止条件，只能从内部退出
+        int dir, ph; K pk; // 声明方向、当前节点hash值、当前节点的键对象
+        if ((ph = p.hash) > h) // 如果当前节点hash 大于 指定key的hash值
+            dir = -1; // 要添加的元素应该放置在当前节点的左侧
+        else if (ph < h) // 如果当前节点hash 小于 指定key的hash值
+            dir = 1; // 要添加的元素应该放置在当前节点的右侧
+        else if ((pk = p.key) == k || (k != null && k.equals(pk))) // 如果当前节点的键对象 和 指定key对象相同
+            return p; // 那么就返回当前节点对象，在外层方法会对v进行写入
+ 
+        // 走到这一步说明 当前节点的hash值  和 指定key的hash值  是相等的，但是equals不等
+        else if ((kc == null &&
+                    (kc = comparableClassFor(k)) == null) ||
+                    (dir = compareComparables(kc, k, pk)) == 0) {
+ 
+            // 走到这里说明：指定key没有实现comparable接口   或者   实现了comparable接口并且和当前节点的键对象比较之后相等（仅限第一次循环）
+        
+ 
+            /*
+             * searched 标识是否已经对比过当前节点的左右子节点了
+             * 如果还没有遍历过，那么就递归遍历对比，看是否能够得到那个键对象equals相等的的节点
+             * 如果得到了键的equals相等的的节点就返回
+             * 如果还是没有键的equals相等的节点，那说明应该创建一个新节点了
+             */
+            if (!searched) { // 如果还没有比对过当前节点的所有子节点
+                TreeNode<K,V> q, ch; // 定义要返回的节点、和子节点
+                searched = true; // 标识已经遍历过一次了
+                /*
+                 * 红黑树也是二叉树，所以只要沿着左右两侧遍历寻找就可以了
+                 * 这是个短路运算，如果先从左侧就已经找到了，右侧就不需要遍历了
+                 * find 方法内部还会有递归调用。参见：find方法解析
+                 */
+                if (((ch = p.left) != null &&
+                        (q = ch.find(h, k, kc)) != null) ||
+                    ((ch = p.right) != null &&
+                        (q = ch.find(h, k, kc)) != null))
+                    return q; // 找到了指定key键对应的
+            }
+ 
+            // 走到这里就说明，遍历了所有子节点也没有找到和当前键equals相等的节点
+            dir = tieBreakOrder(k, pk); // 再比较一下当前节点键和指定key键的大小
+        }
+ 
+        TreeNode<K,V> xp = p; // 定义xp指向当前节点
+        /*
+        * 如果dir小于等于0，那么看当前节点的左节点是否为空，如果为空，就可以把要添加的元素作为当前节点的左节点，如果不为空，还需要下一轮继续比较
+        * 如果dir大于等于0，那么看当前节点的右节点是否为空，如果为空，就可以把要添加的元素作为当前节点的右节点，如果不为空，还需要下一轮继续比较
+        * 如果以上两条当中有一个子节点不为空，这个if中还做了一件事，那就是把p已经指向了对应的不为空的子节点，开始下一轮的比较
+        */
+        if ((p = (dir <= 0) ? p.left : p.right) == null) {  
+            // 如果恰好要添加的方向上的子节点为空，此时节点p已经指向了这个空的子节点
+            Node<K,V> xpn = xp.next; // 获取当前节点的next节点
+            TreeNode<K,V> x = map.newTreeNode(h, k, v, xpn); // 创建一个新的树节点
+            if (dir <= 0)
+                xp.left = x;  // 左孩子指向到这个新的树节点
+            else
+                xp.right = x; // 右孩子指向到这个新的树节点
+            xp.next = x; // 链表中的next节点指向到这个新的树节点
+            x.parent = x.prev = xp; // 这个新的树节点的父节点、前节点均设置为 当前的树节点
+            if (xpn != null) // 如果原来的next节点不为空
+                ((TreeNode<K,V>)xpn).prev = x; // 那么原来的next节点的前节点指向到新的树节点
+            moveRootToFront(tab, balanceInsertion(root, x));// 重新平衡，以及新的根节点置顶
+            return null; // 返回空，意味着产生了一个新节点
+        }
+    }
+}
+
+```
+
+##  hashcode() & equals()
+在Object类中，hashCode()返回的并不是对象在内存中的物理存储地址，是jdk根据对象的地址或者字符串或者数字算出来的int类型的数值
+
+>用于对象运行过程中，识别对象 同一个对象在运行期，哈希值不变
+>这个方法比equals快
+
+一些特点:
+1. hashCode的存在主要是用于查找的快捷性，如Hashtable，HashMap等，hashCode是用来在散列存储结构中确定对象的存储地址的；
+1. 如果两个对象相同，就是适用于equals(java.lang.Object) 方法，那么这两个对象的hashCode一定要相同；
+1. 如果对象的equals方法被重写，那么对象的hashCode也尽量重写，并且产生hashCode使用的对象，一定要和equals方法中使用的一致，否则就会违反上面提到的第2点；
+1. 两个对象的hashCode相同，并不一定表示两个对象就相同，也就是不一定适用于equals(java.lang.Object) 方法，只能够说明这两个对象在散列存储结构中，如Hashtable，他们“存放在同一个篮子里”。
+
+
+
+## 成环
+首先说明 明知道Hashmap线程不安全 还用把它用在多线程环境怕不是脑子有坑
+但是经典的成环问题还是可以让我们对扩容有更好的了解 值得研究一下
+
+**1. 首先两个线程开始扩容 **
+![图1](https://upload-images.jianshu.io/upload_images/13369457-d5367646b40d0d15.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+来看一下代码:
+![](https://upload-images.jianshu.io/upload_images/13369457-4ccfc744ff92a895.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+**问题都出现在红框代码上** 如果其中一个线程正好到这一步的时候被挂起.就会出现问题.假设A正常执行B被挂起.
+
+>B被挂起时的状态
+e -> Entry3
+next -> Entry2
+
+**2. A执行完成**
+![图2](https://upload-images.jianshu.io/upload_images/13369457-2b9348c069cd849c.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+>B的状态还是:
+>e     -> Entry3
+>next -> Entry2
+
+**3. B还是正常执行**
+![图3](https://upload-images.jianshu.io/upload_images/13369457-b7e762565ea37ea9.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+**到这里开始看上去很正常** 因为开始时B的状态还是正常的(被挂起时确定的)
+>然而现在B的状态不对了
+>e     -> Entry2
+>next -> Entry3
+
+和之前对比 **发现e和next完全反了** 原因是A扩容后在原位的节点反向了
+
+![图4](https://upload-images.jianshu.io/upload_images/13369457-78f5a7b3beb7e66a.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+>图4,B的状态
+>e     -> Entry3
+>next -> Entry3.next = null
+
+这时B下一个将要操作的节点又变成了Entry3, 也就是 **Entry2.next = Entry3** 那样必然就形参了循环
+![成环](https://upload-images.jianshu.io/upload_images/13369457-8e589bde571bb6b6.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+
+就是这样~
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

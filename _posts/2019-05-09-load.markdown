@@ -1,0 +1,19 @@
+---
+layout:     post
+title:      "类加载机制"
+subtitle:   "重学Java-Jvm"
+date:       2019-05-09 12:00:00
+author:     "ALID"
+header-img: "img/post-bg-sea.jpeg"
+catalog: true
+tags:
+    - 类加载
+    - Jvm
+    - java
+    - 重学Java
+---
+## Jvm运行的开始
+
+虽然叫`重学Java`系列, 但实话实说类加载之前还真的没有好好学习过, 那开篇就把他拿下吧!
+
+![img](/img/in-post/post-jvm/jvm.png)
