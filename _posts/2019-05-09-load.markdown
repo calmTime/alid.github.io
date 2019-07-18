@@ -4,7 +4,7 @@ title:      "类加载机制"
 subtitle:   "重学Java-Jvm"
 date:       2019-05-09 12:00:00
 author:     "ALID"
-header-img: "img/post-bg-sea.jpeg"
+header-img: "img/post-foggy.jpg"
 catalog: true
 tags:
     - 类加载
