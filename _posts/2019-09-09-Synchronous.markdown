@@ -4,7 +4,7 @@ title:      "数据处理并同步"
 subtitle:   "构建一个数据实时同步处理系统"
 date:       2019-09-09 12:00:00
 author:     "ALID"
-header-img: "img/post-foggy.jpg"
+header-img: "img/post-mail.jpg"
 catalog: true
 tags:
     - 系统设计

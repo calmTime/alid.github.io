@@ -4,7 +4,7 @@ title:      "并发编程"
 subtitle:   "让我们的代码拒绝等待"
 date:       2019-05-09 12:00:00
 author:     "ALID"
-header-img: "img/post-bg-gothic.jpeg"
+header-img: "img/post-gothic.jpeg"
 catalog: false
 tags:
     - java
