@@ -4,7 +4,7 @@ title:      "动态规划"
 subtitle:   "LeetCode算法"
 date:       2019-11-07 12:00:00
 author:     "ALID"
-header-img: "img/post_bg_dp.jpg"
+header-img: "img/post-bg-dp.jpg"
 catalog: true
 tags:
     - LeetCode
