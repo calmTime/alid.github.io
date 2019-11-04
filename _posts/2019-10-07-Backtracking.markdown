@@ -28,6 +28,8 @@ tags:
 
 ### 子集问题
 
+#### 基础解法
+
 回溯法其实就是先进行深度遍历，在走完一条路之后再回到之前的节点，向其他情况进行遍历。例如下图中，先由`空`节点向`1`遍历，当走到`1，2，3`时，再回到`1`节点，选择`1，3`的情况。
 
 ![img](/img/in-post/post-backtracking/backtracking1.png)
@@ -100,6 +102,8 @@ private void getAns(int[] nums, int start, ArrayList<Integer> temp, List<List<In
 如上图中，到第二次出现`[1,2]`的时候，可以判断得到`nums[1] == nums[2]`，即现在判断的情况和上一次判断的情况完全一样，则不再重复判断。
 
 ### 全排列问题
+
+#### 基础解法
 
 全排列问题要比子集问题复杂一些，对应子集问题的限制条件(离开递归的条件)非常简单，在循环中设置`i < nums.length`就可以了。而对应全排列问题，就需要单独设置离开条件。
 
@@ -300,3 +304,5 @@ public boolean isMatch(String s, String p) {
 ```
 
 通过上面的代码可以看到, 在出现*的时候尝试2种情况. 本次匹配一个字符, 或不匹配. 并进行递归调用, 以拿到深度遍历的最终解.
+
+> 其实这道题最优的解法是使用[动态规划](https://calmtime.github.io/2019/11/07/DynamicProgramming/#%E6%AD%A3%E5%88%99%E8%A1%A8%E8%BE%BE%E5%BC%8F%E5%8C%B9%E9%85%8D)完成
