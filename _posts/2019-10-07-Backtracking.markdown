@@ -257,16 +257,17 @@ private void backTracking(int index, int[] candidates, int target, List<List<Int
 
 ### 正则表达式匹配
 
-给出一个字符串`s`和一个字符规律`p`，请你来实现一个支持 '.' 和 '*' 的正则表达式匹配。
+给出一个字符串`s`和一个字符规律`p`，请你来实现一个支持 `.` 和 `*` 的正则表达式匹配。
 
-'.' 匹配任意单个字符
-'*' 匹配零个或多个前面的那一个元素
-所谓匹配，是要涵盖 整个 字符串 s的，而不是部分字符串。
+`.` 匹配任意单个字符
+`*` 匹配零个或多个前面的那一个元素
+所谓匹配，是要涵盖整个字符串`s`的，而不是部分字符串。
 
-说明:
-
-s 可能为空，且只包含从 a-z 的小写字母。
-p 可能为空，且只包含从 a-z 的小写字母，以及字符 . 和 *。
+>说明:
+>
+>s 可能为空，且只包含从 a-z 的小写字母。
+>
+>p 可能为空，且只包含从 a-z 的小写字母，以及字符 . 和 *。
 
 ```
 输入:
@@ -283,7 +284,8 @@ p = ".*"
 ```java
 public boolean isMatch(String s, String p) {
     if (p.isEmpty()) return s.isEmpty(); // 空集处理
-    boolean singleMatch = !s.isEmpty() && (s.charAt(0) == p.charAt(0) || p.charAt(0) == '.');
+    boolean singleMatch = !s.isEmpty() 
+            && (s.charAt(0) == p.charAt(0) || p.charAt(0) == '.');
 
     if (p.length() >= 2 && p.charAt(1) == '*') {
         // 如果下一位是*则 需要考虑2种情况 这一位是否进行匹配
