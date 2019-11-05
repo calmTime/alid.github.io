@@ -327,7 +327,7 @@ private boolean isMatchR(String text, String pattern) {
 }
 ```
 
-以上是逆推的做法, 当然也可以正推出来.
+**以上是逆推的做法, 当然也可以正推出来.**
 
 ```java
 private boolean isMatchS(String s, String p) {
