@@ -679,9 +679,13 @@ private void cacheWrapperClass(Class&lt;?&gt; clazz) {
 
 > 有趣的是这里是**尝试传入接口作为参数调用构造方法**, 如果调用的时候不抛异常, 则认为是Wrapper. 而如果抛出`NoSuchMethodException`异常则认为不是Wrapper.
 
-#### 扩展点自适应
+### 扩展点自适应
 
-之前在IOC部分提到过自适应扩展的概念, 并且如果你没有实现, Dubbo还会默认使用`Javaassist`帮你自动创建一个.
+之前在IOC部分提到过自适应扩展的概念, 并且如果你没有实现, Dubbo还会默认使用`Javaassist`帮你自动创建一个. 
+
+但是刚刚看到的是`Adaptive`注解在类上的情况. 而这种情况其实很少见, 在 Dubbo 中，仅有两个类被 Adaptive 注解了，分别是 `AdaptiveCompiler`和 `AdaptiveExtensionFactory`. 此种情况，表示**拓展的加载逻辑由人工编码完成**.
+
+#### 源码分析
 
 要说的**扩展点自适应**的概念, 先来想一个场景. 在spring中IOC的注入是写死的, 如果要是想动态选择实现可以使用工厂模式等方式. 而在Dubbo中在运行时**通过方法参数动态选择实现**的方式就是靠扩展点自适应来实现的.
 
@@ -713,11 +717,17 @@ public T getAdaptiveExtension() {
 ```java
 private T createAdaptiveExtension() {
     // injectExtension方法刚刚说过了是IOC的实现
-    // 那就看一下getAdaptiveExtensionClass()方法
     return injectExtension((T) getAdaptiveExtensionClass().newInstance());
 }
+```
 
+这里为什么要调用IOC的实现呢? 
 
+Dubbo 中有两种类型的自适应拓展，一种是手工编码的，一种是自动生成的。手工编码的自适应拓展中可能存在着一些依赖，而自动生成的 Adaptive 拓展则不会依赖其他类。这里调用 injectExtension 方法的目的是为手工编码的自适应拓展注入依赖
+
+那就看一下getAdaptiveExtensionClass()方法
+
+```java
 private Class<?> getAdaptiveExtensionClass() {
     // 创建自适应扩展点前, 先从配置文件中加载所有扩展类
     getExtensionClasses();
@@ -731,13 +741,20 @@ private Class<?> getAdaptiveExtensionClass() {
 }
 ```
 
-看到`createAdaptiveExtensionClass`方法就找到实现了.
+这里为什么要从缓存里找一下呢? 这时因为在获取实现类的过程中，如果某个实现类被 Adaptive 注解修饰了，那么该类就会被赋值给 cachedAdaptiveClass 变量。这就又是自己写了自适应扩展类的情况了.
+
+>  可以看到在这两个方法中, 全部都为**自己实现自适应扩展类做了特殊的处理**
+
+再往下看到`createAdaptiveExtensionClass`方法就找到实现了.
 
 ```java
 private Class<?> createAdaptiveExtensionClass() {
-    String code = new AdaptiveClassCodeGenerator(type, cachedDefaultName).generate();
+    // 构建自适应拓展代码
+    String code = createAdaptiveExtensionClassCode();
     ClassLoader classLoader = findClassLoader();
-    org.apache.dubbo.common.compiler.Compiler compiler = ExtensionLoader.getExtensionLoader(org.apache.dubbo.common.compiler.Compiler.class).getAdaptiveExtension();
+    // 获取编译器实现类
+    com.alibaba.dubbo.common.compiler.Compiler compiler = ExtensionLoader.getExtensionLoader(com.alibaba.dubbo.common.compiler.Compiler.class).getAdaptiveExtension();
+    // 编译代码，生成 Class
     return compiler.compile(code, classLoader);
 }
 ```
@@ -757,26 +774,91 @@ public interface Compiler {
 
 >  这里具体是实现在之后分析`javassist`的时候再聊.
 
-**还有一个需要注意的点**在生成的 Protocol$Adaptive 中，发现getDefaultPort和destroy方法都是直接抛出异常的，这是为什么呢？来看看Protocol的源码
+#### 扩展点自适应的代码生成
+
+这里首先会去判断该接口是否至少有一个方法含有`@Adaptive`注解.  若不满足此条件，就会抛出运行时异常
+
+之后会通过拼接的方式, 拼出类的基本信息. 以 Dubbo 的`Protocol`接口为例，生成的代码如下
 
 ```java
-@SPI("dubbo")
-public interface Protocol {
-
-    int getDefaultPort();
-
-    @Adaptive
-    <T> Exporter<T> export(Invoker<T> invoker) throws RpcException;
-
-    @Adaptive
-    <T> Invoker<T> refer(Class<T> type, URL url) throws RpcException;
-
-    void destroy();
+package com.alibaba.dubbo.rpc;
+import com.alibaba.dubbo.common.extension.ExtensionLoader;
+public class Protocol$Adaptive implements com.alibaba.dubbo.rpc.Protocol {
+    // 省略方法代码
 }
-
 ```
 
-可以看到Protocol接口中有4个方法，但只有export和refer两个方法使用了@Adaptive注解。Dubbo自动生成的自适应实例，只有@Adaptive修饰的方法才有具体的实现。所以，Protocol$Adaptive 类中，也只有export和refer这两个方法有具体的实现，其余方法都是抛出异常。
+之后就是重点了, 怎样**生成方法**. 这里分为2种情况, 方法上是否有`@Adaptive`注解.
+
+**方法上没有Adaptive 注解**
+
+没有注解的方法会直接抛出异常, 还是以`Protocol`举例`destroy`方法会生成一下代码:
+
+```java
+throw new UnsupportedOperationException(
+            "method public abstract void com.alibaba.dubbo.rpc.Protocol.destroy() of interface com.alibaba.dubbo.rpc.Protocol is not adaptive method!");
+```
+
+**方法上有Adaptive 注解**
+
+>  接下来就是重点了, 是怎样做到自适应的
+
+这里首先要先介绍一下怎样动态选择实现. 首先来看一个生成好的方法:
+
+```java
+public org.apache.dubbo.rpc.Exporter export(org.apache.dubbo.rpc.Invoker arg0) throws org.apache.dubbo.rpc.RpcException {
+    // 参数为null抛异常
+    if (arg0 == null) throw new IllegalArgumentException("org.apache.dubbo.rpc.Invoker argument == null");
+    // 参数中URL为null抛异常
+    if (arg0.getUrl() == null)
+        throw new IllegalArgumentException("org.apache.dubbo.rpc.Invoker argument getUrl() == null");
+    org.apache.dubbo.common.URL url = arg0.getUrl();
+
+    // 这行代码是从url中获取配置的key
+    String extName = (url.getProtocol() == null ? "dubbo" : url.getProtocol());
+    // key为null抛异常
+    if (extName == null)
+        throw new IllegalStateException("Fail to get extension(org.apache.dubbo.rpc.Protocol) name from url(" + url.toString() + ") use keys([protocol])");
+    // 通过SPI加载机制加载类
+    org.apache.dubbo.rpc.Protocol extension = (org.apache.dubbo.rpc.Protocol) ExtensionLoader.getExtensionLoader(org.apache.dubbo.rpc.Protocol.class).getExtension(extName);
+    // 调用类的方法
+    return extension.export(arg0);
+}
+```
+
+这样可以看到其实生成的方法很简单, 也就是直接从参数中获得要加载的方法, 并加载出来再调用其该方法就好了. 
+
+但是这个参数就涉及Dubbo 中的**URL 统一模型**概念, 也就是用`URL`包含了RPC调用中的所有参数. 所以我们首先遍历方法的参数尝试找到`URL`, 如果没有则遍历参数对象的属性, 如果都找不到则会抛出异常.
+
+> **URL 中主要有以下参数**
+> 
+> protocol：一般是 dubbo 中的各种协议 如：dubbo thrift http zk
+> username/password：用户名/密码
+> host/port：主机/端口
+> path：接口名称
+> parameters：参数键值对
+> 
+> **URL 统一模型优点**
+> 
+> 规范化
+> 扩展性强
+> 统一模型
+> 
+> 我认为这也是异步编程的一个通用处理方案, 需要又一个对象携带上下文信息.
+
+之后在生成扩展名的时候, 会根据逻辑选择不同的方案, 例如下面几种情况, 并且可能不止下面几种情况.
+
+```java
+String extName = (url.getProtocol() == null ? "dubbo" : url.getProtocol());
+// 或
+String extName = url.getMethodParameter(methodName, "loadbalance", "random");
+// 亦或是
+String extName = url.getParameter("client", url.getParameter("transporter", "netty"));
+```
+
+最后生成根据拓展名加载拓展实例，并调用拓展实例的目标方法
+
+> 当然这里只是简单的实现, 实际上判断还是很复杂的, 有兴趣可以看下源码
 
 ### Dubbo SPI 的亮点
 
@@ -802,6 +884,7 @@ compiler = loader.getDefaultExtension();
 ```
 
 - JDK的`spi`如果依赖其他的扩展，**做不到自动注入和装配**, 不能装配`Spring bean`. 也没有类似`AOP`和`IOC`的功能
+- Dubbo的SPI异常记录比较好
 
 **Dubbo SPI特点**
 
