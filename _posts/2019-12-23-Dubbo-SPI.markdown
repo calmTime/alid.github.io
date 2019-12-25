@@ -833,17 +833,25 @@ public org.apache.dubbo.rpc.Exporter export(org.apache.dubbo.rpc.Invoker arg0) t
 > **URL 中主要有以下参数**
 > 
 > protocol：一般是 dubbo 中的各种协议 如：dubbo thrift http zk
+>
 > username/password：用户名/密码
+>
 > host/port：主机/端口
+>
 > path：接口名称
+>
 > parameters：参数键值对
 > 
+>
 > **URL 统一模型优点**
 > 
 > 规范化
+>
 > 扩展性强
+>
 > 统一模型
 > 
+>
 > 我认为这也是异步编程的一个通用处理方案, 需要又一个对象携带上下文信息.
 
 之后在生成扩展名的时候, 会根据逻辑选择不同的方案, 例如下面几种情况, 并且可能不止下面几种情况.
