@@ -645,20 +645,34 @@ if (CollectionUtils.isNotEmpty(wrapperClasses)) {
     }
 }
 ```
+这里的实现就行给**每一个原始扩展点包装所有的装饰器类**, 有点像套娃.
 
 注意到这里的`warpper`是从缓存里取到的, 那什么时候放入缓存的呢, 刚刚说过的`loadClass`类中有一段代码.
 
 ```java
-try {  
-  clazz.getConstructor(type);    
-  Set<Class<?>> wrappers = cachedWrapperClasses;
-  if (wrappers == null) {
-    cachedWrapperClasses = new ConcurrentHashSet<Class<?>>();
-    wrappers = cachedWrapperClasses;
-  }
-  // 将其存入缓存中
-  wrappers.add(clazz);
-} catch (NoSuchMethodException e) {}
+if (isWrapperClass(clazz)) {
+    // clazz是配置的希望加载的类
+    cacheWrapperClass(clazz);
+}
+
+private boolean isWrapperClass(Class&lt;?&gt; clazz) {
+    try {
+        // type就是传入的接口类
+        clazz.getConstructor(type);
+        return true;
+    } catch (NoSuchMethodException e) {
+    	// 没有加载出来会发生异常
+        return false;
+    }
+}
+
+private void cacheWrapperClass(Class&lt;?&gt; clazz) {
+    if (cachedWrapperClasses == null) {
+        cachedWrapperClasses = new ConcurrentHashSet&lt;&gt;();
+    }
+    // 放入缓存中
+    cachedWrapperClasses.add(clazz);
+}
 ```
 
 如果扩展类有复制构造函数，就把该类存起来，供以后使用。有复制构造函数的类就是Wrapper类。通过`clazz.getConstructor(type)`来获取参数是扩展点接口的构造函数。
