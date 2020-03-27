@@ -1,6 +1,6 @@
 /*!
  * Hux Blog v1.8.0 (https://calmtime.github.io/)
- * Copyright 2019 alid
+ * Copyright 2020 alid
  */
 
 @media (min-width: 1200px) {
@@ -856,6 +856,9 @@ samp {
   line-height: 1.7;
 }
 .navbar-custom .navbar-brand {
+  margin-left: 0;
+  background-repeat: no-repeat;
+  background-size: contain;
   background-image: url("/img/alid-w.png");
   width: 7%;
   margin-left: 1%;
@@ -954,6 +957,9 @@ samp {
     transition: transform 0.3s;
   }
   .navbar-custom.is-fixed .navbar-brand {
+    margin-left: 0;
+    background-repeat: no-repeat;
+    background-size: contain;
     background-image: url("/img/alid-b.png");
     color: #404040;
   }
