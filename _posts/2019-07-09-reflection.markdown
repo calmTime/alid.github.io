@@ -5,7 +5,7 @@ subtitle:   "反射为什么这么慢"
 date:       2019-05-09 12:00:00
 author:     "ALID"
 header-img: "img/post-wedding.jpg"
-catalog: false
+catalog: true
 tags:
     - java
     - Jvm
