@@ -190,6 +190,24 @@ public interface Food {
 
 > **Effective Java**作者`Josh Bloch` 提倡使用枚举的方式实现单例
 
+
+```java
+class Resource{
+}
+
+public enum SomeThing {
+    Singleton;
+    private Singleton singleton;
+    SomeThing() {
+        singleton = new Singleton();
+    }
+    public Resource getInstance() {
+        return singleton;
+    }
+}
+```
+
+
 **保证线程安全**
 
 简单的写一个枚举：
