@@ -860,7 +860,7 @@ samp {
   background-size: contain;
   background-image: url("/img/alid-w.png");
   width: 50px;
-  margin-left: 0;
+  margin-left: 0 !important;
   opacity: .85;
   cursor: pointer;
   display: block;
