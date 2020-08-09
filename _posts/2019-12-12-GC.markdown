@@ -11,7 +11,7 @@ tags:
     - GC
 ---
 
-## 堆内存
+# 堆内存
 > 想要垃圾回收就必须知道JVM堆内存的设计 
  
 ![img](/img/in-post/post-jvm/gc_ram.png)
@@ -24,7 +24,7 @@ JVM大致可以分为这几块, 设计到垃圾回收的主要是堆的部分
 
 ![img](/img/in-post/post-jvm/gc_heap_proportion.png)
 
-## 怎么找到被回收对象
+# 怎么找到被回收对象
 ### 引用计数
 虽然简单, 但无法解决循环引用的问题
 
