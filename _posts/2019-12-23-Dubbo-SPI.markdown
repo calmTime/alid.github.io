@@ -2,7 +2,7 @@
 layout:     post
 title:      "SPI与Dubbo的可扩展机制"
 subtitle:   "Dubbo的扩展性设计"
-date:       2019-12-12 12:00:00
+date:       2019-12-23 12:00:00
 author:     "ALID"
 header-img: "img/36_white_4k.jpg"
 catalog: true
