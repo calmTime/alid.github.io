@@ -26,11 +26,11 @@ body, html {
 
 @font-face {
 	font-family: 'huxico';
-	src:url('../fonts/huxico.eot');
-	src:url('../fonts/huxico.eot?#iefix') format('embedded-opentype'),
-		url('../fonts/huxico.woff') format('woff'),
-		url('../fonts/huxico.ttf') format('truetype'),
-		url('../fonts/huxico.svg#huxico') format('svg');
+	src:url('pwa/portfolio/fonts/huxico.eot');
+	src:url('pwa/portfolio/fonts/huxico.eot?#iefix') format('embedded-opentype'),
+		url('pwa/portfolio/fonts/huxico.woff') format('woff'),
+		url('pwa/portfolio/fonts/huxico.ttf') format('truetype'),
+		url('pwa/portfolio/fonts/huxico.svg#huxico') format('svg');
 	font-weight: normal;
 	font-style: normal;
 } /* Made with http://icomoon.io/ */
@@ -150,7 +150,7 @@ body, html {
     display: block;
     width: 40px;
     height: 40px;
-    background: url("../images/logo-vue.png") 50% 50% no-repeat;
+    background: url("pwa/portfolio/images/logo-vue.png") 50% 50% no-repeat;
     background-size: 20px;
 }
 
@@ -159,7 +159,7 @@ body, html {
 	display: block;
 	width: 40px;
 	height: 40px;
-	background: url("../images/logo-kissy.png") 50% 50% no-repeat;
+	background: url("pwa/portfolio/images/logo-kissy.png") 50% 50% no-repeat;
 	background-size: 20px;
 }
 
@@ -168,7 +168,7 @@ body, html {
 	display: block;
 	width: 40px;
 	height: 40px;
-	background: url("../images/logo-jquery.png") 50% 50% no-repeat;
+	background: url("pwa/portfolio/images/logo-jquery.png") 50% 50% no-repeat;
 	background-size: 20px;
 }
 
@@ -177,7 +177,7 @@ body, html {
 	display: block;
 	width: 40px;
 	height: 40px;
-	background: url("../images/logo-react.png") 50% 50% no-repeat;
+	background: url("pwa/portfolio/images/logo-react.png") 50% 50% no-repeat;
 	background-size: 22px;
 }
 
