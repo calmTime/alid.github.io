@@ -4,7 +4,7 @@ title:      "并发系统设计"
 subtitle:   "按照场景区分不同情况下的并发设计"
 date:       2019-12-10 12:00:00
 author:     "ALID"
-header-img: "img/post-bg-palace.jpeg"
+header-img: "img/13_4k.jpg"
 catalog: true
 tags:
     - 并发
