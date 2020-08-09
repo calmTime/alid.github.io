@@ -68,6 +68,7 @@ JVM大致可以分为这几块, 设计到垃圾回收的主要是堆的部分
 ![img](/img/in-post/post-jvm/gc_card_table.png)
 
 **写屏障**
+
 写屏障可以理解为是对于对引用类型字段赋值的一个切面, 也就是在发送对引用类型字段赋值的时候, 就会去做一些操作.
 
 每次年老代对象中某个引用新生代的字段发生变化时，Hotspot VM就必须将该卡所对应的卡表元素设置为适当的值，从而将该引用字段所在的卡标记为脏。在Minor GC过程中，垃圾收集器只会在脏卡中扫描查找年老代-新生代引用。
@@ -138,7 +139,8 @@ G1是并发,整理,混合的垃圾回收器, 在Jdk1.9中作为默认的垃圾�
 
 相较于传统的垃圾回收器, G1的数据结构也发生了变化, G1的各代存储地址是不连续的，每一代都使用了n个不连续的大小相同的Region，每个Region占有一块连续的虚拟内存地址。
 ![img](/img/in-post/post-jvm/gc_g1_region.png)
-在上图中，我们注意到还有一些Region标明了H，它代表Humongous，这表示这些Region存储的是巨大对象（humongous object，H-obj），即**大小大于等于region一半的对象**。H-obj有如下几个特征： 
+在上图中，我们注意到还有一些Region标明了H，它代表Humongous，这表示这些Region存储的是巨大对象（humongous object，H-obj），即**大小大于等于region一半的对象**。H-obj有如下几个特征：
+ 
 * H-obj直接分配到了old gen，防止了反复拷贝移动。 
 * H-obj在 `global concurrent marking` 阶段的cleanup 和 full GC阶段回收。
 * 在分配H-obj之前先检查是否超过 `initiating heap occupancy percent` 和 `the marking threshold`, 如果超过的话，就启动 `global concurrent marking`，为的是提早回收，防止 `evacuation failures` 和 `full GC`
@@ -154,16 +156,19 @@ G1是并发,整理,混合的垃圾回收器, 在Jdk1.9中作为默认的垃圾�
 #### 并发标记的过程
 
 **初始标记**
+
 stop-the-world，它往往**伴随着一次普通的Young GC发生**，然后对Survivor区（root region）进行标记，因为该区可能存在对老年代的引用。
 
 因为 Young GC 是需要 stop-the-world 的，所以并发周期直接重用这个阶段，虽然会增加 CPU 开销，但是停顿时间只是增加了一小部分。就是在**标记了从GC Root开始直接可达的对象**
 
 **并发标记**
+
 使用STAB进行标记
 
 这个阶段是**并发执行**的，中间可以发生多次Young GC，Young GC 会中断标记过程. 就是使用**可达性分析来标记**
 
 **重新标记**：
+
 stop-the-world，完成最后的存活对象标记。标记那些在**并发标记阶段发生变化的对象**，将被回收。
 
 并发标记阶段， GC 线程完成对象图的扫描之后，还会去处理 SATB 记录下的在并发时有引用变动的对象。
@@ -172,6 +177,7 @@ stop-the-world，完成最后的存活对象标记。标记那些在**并发标�
 > 这里虽然用的是使用原始快照的方法, 但是对于在并发标记阶段新产生的对象, 还是要重新标记的.  
 
 **清除垃圾（Cleanup）**
+
 清除空Region（没有存活对象的），加入到free list。
 这里并不会去选择标记的垃圾进行清理.
 
@@ -366,24 +372,24 @@ CMS的incremental update设计使得它在remark阶段必须重新扫描所有�
 
 ## 其他几个回收器
 **Serial 收集器**
-	- 新时代采用复制算法, 并STW
-	- 老年代采用标记-整理, 并STW
+- 新时代采用复制算法, 并STW
+- 老年代采用标记-整理, 并STW
 
 **Serial old**
-	- 老年代版本, 单线程, STW
-	- 作为CMS的后备方案
+- 老年代版本, 单线程, STW
+- 作为CMS的后备方案
 
 **parNew** 
-	- 和Serial基本一样, 仅仅是**新生代多线程回收**
-	- 适用于多核(至少4核)的CPU使用
+- 和Serial基本一样, 仅仅是**新生代多线程回收**
+- 适用于多核(至少4核)的CPU使用
 
 **Parallel old**
-	- 多线程收集
+- 多线程收集
 
 **Parallel Scavenge**
-	- **有自适应策略, 会调整新生代大小来减少停顿时间**, 吞吐量优先
-	- 但代价是**让YGC频率增加**
-	- 无法与CMS配合
+- **有自适应策略, 会调整新生代大小来减少停顿时间**, 吞吐量优先
+- 但代价是**让YGC频率增加**
+- 无法与CMS配合
 
 
 ## 参考
