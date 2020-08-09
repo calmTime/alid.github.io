@@ -111,27 +111,27 @@ protected  T doGetBean(final String name, @Nullable final Class requiredType,
 ```java
 protected Object getSingleton(String beanName, boolean allowEarlyReference) {
   // 首先尝试从singletonObjects获取是否存在以及初始化好的bean
-	Object singletonObject = this.singletonObjects.get(beanName);
+  Object singletonObject = this.singletonObjects.get(beanName);
   // 如果为空, 且发现已经在初始化
-	if (singletonObject == null && isSingletonCurrentlyInCreation(beanName)) {
-		synchronized (this.singletonObjects) {
-			// 从未初始化好的map中查询
-			singletonObject = this.earlySingletonObjects.get(beanName);
-			// 如果为空, 且允许早期依赖
-			if (singletonObject == null && allowEarlyReference) {
-				// 获取创建对象的工厂
-				ObjectFactory<?> singletonFactory = this.singletonFactories.get(beanName);
-				if (singletonFactory != null) {
-					// 获取对象实例(可能是没加载好的)
-					singletonObject = singletonFactory.getObject();
-					// 将其提前暴露, 放入为初始化好的map中
-					this.earlySingletonObjects.put(beanName, singletonObject);
-					this.singletonFactories.remove(beanName);
-				}
-			}
-		}
-	}
-	return singletonObject;
+  if (singletonObject == null && isSingletonCurrentlyInCreation(beanName)) {
+    synchronized (this.singletonObjects) {
+      // 从未初始化好的map中查询
+      singletonObject = this.earlySingletonObjects.get(beanName);
+      // 如果为空, 且允许早期依赖
+      if (singletonObject == null && allowEarlyReference) {
+        // 获取创建对象的工厂
+        ObjectFactory<?> singletonFactory = this.singletonFactories.get(beanName);
+        if (singletonFactory != null) {
+          // 获取对象实例(可能是没加载好的)
+          singletonObject = singletonFactory.getObject();
+          // 将其提前暴露, 放入为初始化好的map中
+          this.earlySingletonObjects.put(beanName, singletonObject);
+          this.singletonFactories.remove(beanName);
+        }
+      }
+    }
+  }
+  return singletonObject;
 }
 
 // 这里会在执行创建之前将beanName加入set中
@@ -156,33 +156,32 @@ public boolean isSingletonCurrentlyInCreation(String beanName) {
 
 ```java
 protected Object createBean(String beanName, RootBeanDefinition mbd, @Nullable Object[] args) throws BeanCreationException {
-	
-	//... 校验是否可以被classLoader加载
+   //... 校验是否可以被classLoader加载
 
-	try {
-     // bean加载记录, 用以判断循环引用和是否已经被加载
-		mbdToUse.prepareMethodOverrides();
-	}
-	catch (BeanDefinitionValidationException ex) {
-		throw new BeanDefinitionStoreException(mbdToUse.getResourceDescription(),
-				beanName, “Validation of method overrides failed”, ex);
-	}
-
-	try {
-		// 创建bean
-		Object beanInstance = doCreateBean(beanName, mbdToUse, args);
-		if (logger.isTraceEnabled()) {
-			logger.trace("Finished creating instance of bean '" + beanName + "'");
-		}
-		return beanInstance;
-	}
-	catch (BeanCreationException | ImplicitlyAppearedSingletonException ex) {
-		throw ex;
-	}
-	catch (Throwable ex) {
-		throw new BeanCreationException(
-				mbdToUse.getResourceDescription(), beanName, "Unexpected exception during bean creation", ex);
-	}
+   try {
+    // bean加载记录, 用以判断循环引用和是否已经被加载
+    mbdToUse.prepareMethodOverrides();
+   }
+   catch (BeanDefinitionValidationException ex) {
+     throw new BeanDefinitionStoreException(mbdToUse.getResourceDescription(),
+       beanName, “Validation of method overrides failed”, ex);
+   }
+    
+   try {
+     // 创建bean
+     Object beanInstance = doCreateBean(beanName, mbdToUse, args);
+     if (logger.isTraceEnabled()) {
+       logger.trace("Finished creating instance of bean '" + beanName + "'");
+     }
+     return beanInstance;
+   }
+   catch (BeanCreationException | ImplicitlyAppearedSingletonException ex) {
+     throw ex;
+   }
+   catch (Throwable ex) {
+     throw new BeanCreationException(
+       mbdToUse.getResourceDescription(), beanName, "Unexpected exception during bean creation", ex);
+   }
 }
 ```
 
@@ -204,18 +203,18 @@ protected Object doCreateBean(final String beanName, final RootBeanDefinition mb
   }
 
   // 调用所有的bean后置处理器
-	synchronized (mbd.postProcessingLock) {
-		if (!mbd.postProcessed) {
-			try {
-				applyMergedBeanDefinitionPostProcessors(mbd, beanType, beanName);
-			}
-			catch (Throwable ex) {
-				throw new BeanCreationException(mbd.getResourceDescription(), beanName,
-					“Post-processing of merged bean definition failed”, ex);
-			}
-			mbd.postProcessed = true;
-		}
-	}
+  synchronized (mbd.postProcessingLock) {
+    if (!mbd.postProcessed) {
+      try {
+        applyMergedBeanDefinitionPostProcessors(mbd, beanType, beanName);
+      }
+      catch (Throwable ex) {
+        throw new BeanCreationException(mbd.getResourceDescription(), beanName,
+          “Post-processing of merged bean definition failed”, ex);
+      }
+      mbd.postProcessed = true;
+    }
+  }
 
   // 判断Spring是否配置了支持提前暴露目标bean，也就是是否支持提前暴露半成品的bean
   boolean earlySingletonExposure = (mbd.isSingleton() && this.allowCircularReferences 
@@ -261,33 +260,33 @@ protected Object doCreateBean(final String beanName, final RootBeanDefinition mb
 ```java
 public Object getSingleton(String beanName, ObjectFactory<?> singletonFactory) {
 	Assert.notNull(beanName, "Bean name must not be null");
-	// 加锁
-	synchronized (this.singletonObjects) {
-		// 检查是否已经被加载了，单例模式就是可以复用已经创建的 bean
-		Object singletonObject = this.singletonObjects.get(beanName);
-		if (singletonObject == null) {
-			// 初始化前操作，校验是否 beanName 是否有别的线程在初始化，并加入初始化状态中
-			beforeSingletonCreation(beanName);
-			boolean newSingleton = false;
-			boolean recordSuppressedExceptions = (this.suppressedExceptions == null);
-			if (recordSuppressedExceptions) {
-				this.suppressedExceptions = new LinkedHashSet<>();
-			}
-			// 初始化 bean，这个就是刚才的回调接口调用的方法，实际执行的是 createBean 方法
-			singletonObject = singletonFactory.getObject();
-			newSingleton = true;
-			if (recordSuppressedExceptions) {
-				this.suppressedExceptions = null;
-			}
-			// 初始化后的操作，移除初始化状态
-			afterSingletonCreation(beanName);
-			if (newSingleton) {
-				// 加入缓存
-				addSingleton(beanName, singletonObject);
-			}
-		}
-		return singletonObject;
-	}
+ // 加锁
+ synchronized (this.singletonObjects) {
+    // 检查是否已经被加载了，单例模式就是可以复用已经创建的 bean
+    Object singletonObject = this.singletonObjects.get(beanName);
+    if (singletonObject == null) {
+        // 初始化前操作，校验是否 beanName 是否有别的线程在初始化，并加入初始化状态中
+        beforeSingletonCreation(beanName);
+        boolean newSingleton = false;
+        boolean recordSuppressedExceptions = (this.suppressedExceptions == null);
+        if (recordSuppressedExceptions) {
+            this.suppressedExceptions = new LinkedHashSet<>();
+        }
+        // 初始化 bean，这个就是刚才的回调接口调用的方法，实际执行的是 createBean 方法
+        singletonObject = singletonFactory.getObject();
+        newSingleton = true;
+        if (recordSuppressedExceptions) {
+            this.suppressedExceptions = null;
+        }
+        // 初始化后的操作，移除初始化状态
+        afterSingletonCreation(beanName);
+        if (newSingleton) {
+            // 加入缓存
+            addSingleton(beanName, singletonObject);
+        }
+    }
+    return singletonObject;
+ }
 }
 ```
 
