@@ -98,16 +98,19 @@ Hotspot VM的字节码解释器和JIT编译器使用**写屏障**维护卡表。
 
 ### 触发条件
 **Young GC**
+
 各种Young GC发生的原因都是eden区被占满
 
 Parallel Scavenge（-XX:+UseParallelGC）框架下，默认是在要触发full GC前先执行一次young GC，并且两次GC之间能让应用程序稍微运行一小下，以期降低full GC的暂停时间（因为young GC会尽量清理了young gen的死对象，减少了full GC的工作量）
 
 **非并发full GC**
+
 Serial Old GC／PS MarkSweep GC／Parallel Old GC 的触发则是在要执行Young GC时候预测其promote的object的总size超过老生代剩余size
 
 大对象直接放入老年代, 且老年代当前空间不足的时候
 
 **并发收集引擎**
+
 - CMS GC的initial marking的触发条件是老生代使用比率超过某值
 - G1 GC的initial marking的触发条件是Heap使用比率超过某值
 - Full GC for CMS算法和Full GC for G1 GC算法的触发原因很明显, 就是他们触发老年代的回收赶不上分配内存的速度.
@@ -191,7 +194,7 @@ stop-the-world，完成最后的存活对象标记。标记那些在**并发标�
 
 由于并发阶段的存在，Mutator和Garbage Collector线程同时对对象进行修改，就会出现白对象漏标的情况，
 
-这种情况发生的前提是： 
+这种情况发生的前提是:
 * Mutator赋予一个黑对象该白对象的引用。 
 * Mutator删除了所有从灰对象到该白对象的直接或者间接引用。
 
@@ -211,6 +214,7 @@ stop-the-world，完成最后的存活对象标记。标记那些在**并发标�
 
 ### 漏标与浮动垃圾
 这里需要再看一下在并发标记中所使用到的**三色标记算法**
+
 **白色：表示对象尚未被垃圾回收器访问过**。显然，在可达性分析刚刚开始的阶段，所有的对象都是白色的，若在分析结束的阶段，仍然是白色的对象，即代表不可达。
 **黑色：表示对象已经被垃圾回收器访问过，且这个对象的所有引用都已经扫描过**。黑色的对象代表已经扫描过，它是安全存活的，如果有其它的对象引用指向了黑色对象，无须重新扫描一遍。黑色对象不可能直接（不经过灰色对象）指向某个白色对象。
 **灰色：表示对象已经被垃圾回收器访问过，但这个对象至少存在一个引用还没有被扫描过**。
@@ -251,14 +255,14 @@ G1 GC是一个响应时间优先的GC算法，它与CMS最大的不同是，用�
 ### GC过程
 > G1提供了两种GC模式，Young GC和Mixed GC，两种都是完全Stop The World的。
    
-* Young GC：选定所有年轻代里的Region。通过控制年轻代的region个数，即年轻代内存大小，来控制young GC的时间开销。 
-* Mixed GC：选定所有年轻代里的Region，外加根据global concurrent marking统计得出收集收益高的若干老年代Region。在用户指定的开销目标范围内尽可能选择收益高的老年代Region。
+Young GC：选定所有年轻代里的Region。通过控制年轻代的region个数，即年轻代内存大小，来控制young GC的时间开销。 
+Mixed GC：选定所有年轻代里的Region，外加根据global concurrent marking统计得出收集收益高的若干老年代Region。在用户指定的开销目标范围内尽可能选择收益高的老年代Region。
 并且由上面的描述可知，**Mixed GC不是full GC**，它只能回收部分老年代的Region，如果mixed GC实在无法跟上程序分配内存的速度，导致老年代填满无法继续进行Mixed GC，就会使用serial old GC（full GC）来收集整个GC heap。所以我们可以知道，G1是不提供full GC的。
 Young GC发生的时机大家都知道(eden区满了)，那什么时候发生Mixed GC呢？其实是由一些参数控制着的，另外也控制着哪些老年代Region会被选入CSet。 
-* G1HeapWastePercent：在global concurrent marking结束之后，我们可以知道old gen regions中有多少空间要被回收，在每次YGC之后和再次发生Mixed GC之前，会检查垃圾占比是否达到此参数，只有达到了，下次才会发生Mixed GC。 
-* G1MixedGCLiveThresholdPercent：old generation region中的存活对象的占比，只有在此参数之下，才会被选入CSet。 
-* G1MixedGCCountTarget：一次global concurrent marking之后，最多执行Mixed GC的次数。 
-* G1OldCSetRegionThresholdPercent：一次Mixed GC中能被选入CSet的最多old generation region数量。 
+G1HeapWastePercent：在global concurrent marking结束之后，我们可以知道old gen regions中有多少空间要被回收，在每次YGC之后和再次发生Mixed GC之前，会检查垃圾占比是否达到此参数，只有达到了，下次才会发生Mixed GC。 
+G1MixedGCLiveThresholdPercent：old generation region中的存活对象的占比，只有在此参数之下，才会被选入CSet。 
+G1MixedGCCountTarget：一次global concurrent marking之后，最多执行Mixed GC的次数。 
+G1OldCSetRegionThresholdPercent：一次Mixed GC中能被选入CSet的最多old generation region数量。 
 
 ### 垃圾回收过程
 Evacuation阶段是**全暂停**的。它负责把一部分region里的活对象**拷贝**到空region里去，然后回收原本的region的空间。
@@ -371,6 +375,7 @@ CMS的incremental update设计使得它在remark阶段必须重新扫描所有�
 
 
 ## 其他几个回收器
+
 **Serial 收集器**
 - 新时代采用复制算法, 并STW
 - 老年代采用标记-整理, 并STW
@@ -393,11 +398,19 @@ CMS的incremental update设计使得它在remark阶段必须重新扫描所有�
 
 
 ## 参考
+
 [HotSpot VM 请教G1算法的原理 - 资料 - 高级语言虚拟机 - ITeye群组](https://hllvm-group.iteye.com/group/topic/44381)
+
 [面试官:你说你熟悉jvm?那你讲一下并发的可达性分析 - 掘金](https://juejin.im/post/5e5283abf265da573d61a311)
+
 [面试官问我G1回收器怎么知道你是什么时候的垃圾？ - 掘金](https://juejin.im/post/5e5b15f5f265da57602c547d#heading-7)
+
 [面试官看了我之前的文章对我说：你回去等通知吧！ - 掘金](https://juejin.im/post/5e63ab6251882549165423a1)
+
 [Java Hotspot G1 GC的一些关键技术 - 美团技术团队](https://tech.meituan.com/2016/09/23/g1.html)
+
 [可能是最全面的G1学习笔记 - 知乎](https://zhuanlan.zhihu.com/p/54048685)
+
 [G1调优常用参数及其作用_Java_点滴之积-CSDN博客](https://blog.csdn.net/qq_27529917/article/details/87072130)
+
 [Garbage First Garbage Collector Tuning](https://www.oracle.com/technical-resources/articles/java/g1gc.html)
