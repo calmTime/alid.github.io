@@ -4,7 +4,7 @@ title:      "spring bean的加载过程"
 subtitle:   "spring是如何帮我们管理bean的"
 date:       2020-05-02 12:00:00
 author:     "ALID"
-header-img: "img/bighorsecatbook.jpeg"
+header-img: "img/psot-bg-piano.jpg"
 catalog: true
 tags:
     - java
