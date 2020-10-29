@@ -1,10 +1,10 @@
 {
-    "name": "hux-blog",
-    "title": "Hux Blog",
+    "name": "alid-blog",
+    "title": "alid Blog",
     "author": "alid",
     "version": "1.8.0",
     "private": true,
-    "homepage": "https://alid.github.io/",
+    "homepage": "https://calmtime.github.io/",
     "repository": {
         "type": "git",
         "url": "https://github.com/calmTime/alid.github.io"

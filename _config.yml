@@ -5,7 +5,7 @@ header-img: img/home-bg.jpg
 email: silence.yv@gmail.com
 description: "test"
 keyword: "博客"
-url: "https://alid.github.io"              # your host, for absolute URL
+url: "https://calmtime.github.io"              # your host, for absolute URL
 baseurl: ""                             # for example, '/blog' if your blog hosted on 'host/blog'
 
 # Publish posts or collection documents with a future date.
